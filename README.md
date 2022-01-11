@@ -1,4 +1,4 @@
-# span-srl
+# Span Based Semantic Role Labeling
 A span-based Semantic Role Labeling model in bahasa Indonesia adapted from Li, et al. (2019) [[1]](#1) and built with keras tensorflow
 
  
