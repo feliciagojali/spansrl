@@ -9,7 +9,7 @@ class Attention(Layer):
         self.softmax = Softmax(axis=2)
         self.max_span_width = config['max_span_width']
         self.max_tokens = config['max_tokens']
-        self.start, self.end = span_idx
+        self.start, self.end, _ = span_idx
                   
     def call(self, input): # Shape input: (batch_size, max_tokens, emb)
         # Shape span_indices: (num_spans, max_span_width)

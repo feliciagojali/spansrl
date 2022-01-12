@@ -9,7 +9,7 @@ class SpanEndpointsLength(Layer):
         self.start, self.end, self.width = span_idx
 
     def call(self, input): #inputs: [batch_size, max_tokens, emb] # embeddings
-        # Shape idx_start, idx_end: [num_spans] # start and end id of every span
+        # Shape span_start, span_end: [batch_size, num_spans, emb] # emb of start and end id of every span
         span_start = tf.gather(input, self.start, axis=1, name='span_start')
         span_end = tf.gather(input, self.end, axis=1, name='span_end')
 
@@ -19,7 +19,8 @@ class SpanEndpointsLength(Layer):
         expanded_width = tf.expand_dims(width, 0) # Shape: (1, num_spans)
         span_length = tf.tile(expanded_width, [batch_size, 1]) # Shape: (batch_size, num_spans)
 
-        return [span_start, span_end, span_length]
+        out = [span_start, span_end, span_length]
+        return out
 
 class PredicateArgumentEmb(Layer): 
     # To compute embedding of each predicate-argument pair
@@ -42,7 +43,8 @@ class PredicateArgumentEmb(Layer):
         pair_emb_list = [arg_emb_tiled, pred_emb_tiled]
         pair_emb = tf.concat(pair_emb_list, 3)  # Shape: (batch_size, num_args, num_preds, pred_emb+arg_emb)
 
-        return pair_emb
+        out = pair_emb
+        return out
 
 class NullScores(Layer):
     # To generate scores for null labels which is a constant 0
@@ -50,8 +52,8 @@ class NullScores(Layer):
         super(NullScores, self).__init__(**kwargs)
 
     def call(self, inputs): 
-        # Shape arg_emb: (batch_size, num_args, emb)
-        # Shape pred_emg: (batch_size, num_preds, emb)
+        # Shape arg_emb: (batch_size, num_args, _)
+        # Shape pred_emg: (batch_size, num_preds, _)
         arg_emb, pred_emb = inputs
 
         num_args = arg_emb.shape[1]

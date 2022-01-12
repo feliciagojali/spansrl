@@ -1,0 +1,20 @@
+{
+    "default": {
+        "max_span_width": 5,
+        "max_tokens": 15,
+        "num_srl_labels": 21,
+        "char_vocab": 95,
+        "char_output_dim": 200,
+        "char_cnn_kernel_size": 3,
+        "max_char": 52,
+        "dropout_value": 0.4,
+        "lstm_layers": 1,
+        "lstm_units": 200,
+        "char_dropout": 0.3,
+        "unary_depth": 2,
+        "unary_units": 150,
+        "mlp_pred_units": 50,
+        "mlp_arg_units": 50,
+        "span_width_emb": 20
+    }
+}
