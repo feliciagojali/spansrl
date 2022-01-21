@@ -18,7 +18,7 @@
         "mlp_pred_units": 50,
         "mlp_arg_units": 50,
         "span_width_emb": 20,
-        "train_data": "raw.csv",
+        "train_data": "/data/raw/raw.csv",
         "padding_side": "left",
         "word_emb_path": "data/raw/kyubyong.ft.id.bin"
     }

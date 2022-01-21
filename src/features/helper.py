@@ -7,15 +7,17 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
     for sentence in sentences:
         # Get bert token (subword)
         tokens = tokenizer(' '.join(sentence))
+        print(tokens)
         # Get max length needed if word token
         max_len = max_tokens + len(tokens) - len(sentence) + 2
+        print(max_len)
         # Total padding
         num_pad = max_len - len(tokens) - 2
         ## TO DO: Handle Truncating
         inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
         # Remove bos, eos
         input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
-
+        print(len(inputs['input_ids']))
         x = torch.LongTensor(input_ids).view(1,-1)
         out = model(x)[0].cpu().detach().numpy()
 

@@ -1,9 +1,7 @@
 
-from bdb import effective
-from imp import new_module
+
 import os
 import sys
-from venv import create
 
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -21,7 +19,6 @@ import torch
 
 unk_label = '<unk>'
 pad_label = '<pad>'
-train_data_path = "/data/raw/"
 
 class SRLData(object):
     def __init__(self, config):
@@ -107,7 +104,7 @@ class SRLData(object):
         np.save('data/features/word_emb.npy', word_emb)
 
     def read_raw_data(self):
-        file = open(os.getcwd()+train_data_path + self.config['train_data'], 'r')
+        file = open(os.getcwd() + self.config['train_data'], 'r')
         lines = file.readlines()
         
         errorData = []

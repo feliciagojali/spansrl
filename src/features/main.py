@@ -5,7 +5,7 @@ raw_filename = 'raw.csv'
 import enum
 import json
 
-from data import SRLData
+from SRLData import SRLData
 
 def main():
     filename = './configurations.json'
