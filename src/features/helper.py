@@ -21,7 +21,6 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
         # Remove bos, eos
         input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
-        print(len(inputs['input_ids']))
         x = torch.LongTensor(input_ids).view(1,-1)
         out = model(x)[0].cpu().detach().numpy()
 
@@ -30,7 +29,8 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         is_subword = np.array(offset)[:,0] != 0
         subword_list = np.where(is_subword == True)
         subword_list = subword_list[0].tolist()
-
+        print('subword')
+        print(subword_list)
         if (len(subword_list) != 0):
             start = subword_list[0]
             end = subword_list[0]
@@ -67,6 +67,8 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                         end = id
                         start = id
 
+            print('new_id')
+            print(new_id)
             el_del = [item for sublist in del_arr for item in sublist[1:]]
             mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
             # Prepare out vector
