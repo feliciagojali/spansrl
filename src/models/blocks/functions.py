@@ -32,16 +32,16 @@ class PredicateArgumentEmb(Layer):
         # Shape pred_emg: (batch_size, num_preds, emb)
         arg_emb, pred_emb = inputs
 
-        arg_emb_expanded = tf.expand_dims(arg_emb, 2) # Shape: (batch_size, num_args, 1, emb)
-        pred_emb_expanded = tf.expand_dims(pred_emb, 1) # Shape: (batch_size, 1, num_preds, emb)
+        arg_emb_expanded = tf.expand_dims(arg_emb, 1) # Shape: (batch_size, 1, num_args, emb)
+        pred_emb_expanded = tf.expand_dims(pred_emb, 2) # Shape: (batch_size, num_preds, 1, emb)
         
-        num_spans = arg_emb_expanded.shape[1]
-        num_preds = pred_emb_expanded.shape[2]
-        arg_emb_tiled = tf.tile(arg_emb_expanded, [1, 1, num_preds, 1])  # Shape: (batch_size, num_args, num_preds, emb]
-        pred_emb_tiled = tf.tile(pred_emb_expanded, [1, num_spans, 1, 1])  # Shape: (batch_size, num_args, num_preds, emb]
+        num_spans = arg_emb_expanded.shape[2]
+        num_preds = pred_emb_expanded.shape[1]
+        arg_emb_tiled = tf.tile(arg_emb_expanded, [1, num_preds, 1, 1])  # Shape: (batch_size, num_preds, num_args, emb)
+        pred_emb_tiled = tf.tile(pred_emb_expanded, [1, 1, num_spans, 1])  # Shape: (batch_size, num_preds, num_args, emb)
 
-        pair_emb_list = [arg_emb_tiled, pred_emb_tiled]
-        pair_emb = tf.concat(pair_emb_list, 3)  # Shape: (batch_size, num_args, num_preds, pred_emb+arg_emb)
+        pair_emb_list = [pred_emb_tiled, arg_emb_tiled]
+        pair_emb = tf.concat(pair_emb_list, 3)  # Shape: (batch_size, num_preds, num_args, pred_emb+arg_emb)
 
         out = pair_emb
         return out
@@ -60,6 +60,6 @@ class NullScores(Layer):
         num_preds = pred_emb.shape[1]
 
         batch_size = tf.shape(arg_emb)[0]
-        out = tf.zeros([batch_size, num_args, num_preds, 1])
+        out = tf.zeros([batch_size, num_preds, num_args, 1])
 
         return out

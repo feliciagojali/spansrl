@@ -3,17 +3,17 @@ from tensorflow.keras.layers import Layer, LSTM, Concatenate, Dropout
 from models.layers import Highway
 
 class BiHLSTM(Layer):
-    def __init__(self, config, **kwargs):
+    def __init__(self, config, name, **kwargs):
         super(BiHLSTM, self).__init__(**kwargs)
         self.forwards = []
         self.backwards = []
         self.highway = []
         self.concatenate = Concatenate(name='lstm_output')
         self.dropout = Dropout(config['dropout_value'])
-        for _ in range(config['lstm_layers']):
-            self.forwards.append(LSTM(config['lstm_units'], return_sequences=True, name='lstm_forward'))
-            self.backwards.append(LSTM(config['lstm_units'], go_backwards=True, return_sequences=True, name='lstm_backward'))
-            self.highway.append(Highway(name='highway'))
+        for i in range(config['lstm_layers']):
+            self.forwards.append(LSTM(config['lstm_units'], return_sequences=True, name='lstm_forward_' +name+ str(i)))
+            self.backwards.append(LSTM(config['lstm_units'], go_backwards=True, return_sequences=True, name='lstm_backward_'+name+str(i)))
+            self.highway.append(Highway(name='highway'+str(i)))
                   
     def call(self, input): # Shape input: (batch_size, max_tokens, emb)
         current_input = input

@@ -10,13 +10,13 @@ class SRL(Model):
     def __init__(self, config, **kwargs):
         super(SRL, self).__init__(**kwargs)
         # Configurations and constants
-        self.max_span_width = config['max_span_width']
+        self.max_arg_span = config['max_arg_span']
+        self.max_pred_span = config['max_pred_span']
         self.max_tokens = config['max_tokens']
         self.num_labels = config['num_srl_labels']
         self.max_char = config['max_char']
-        span_idx = create_span(self.max_tokens, self.max_span_width)
-        self.idx_span_start, self.idx_span_end, self.span_width_list = span_idx 
-
+        arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
+        pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
         # Blocks and Layers
         dropout_val = config['dropout_value']
         self.character_block = CharacterEmbedding(config, name="character_embedding")
@@ -31,10 +31,17 @@ class SRL(Model):
         self.mlp_arg = Dense(config['mlp_arg_units'], activation='relu')       
 
         # Span representation for argument 
-        self.span_endpoints_len = SpanEndpointsLength(span_idx, name="span_endpoints_and_length")
-        self.span_attention = Attention(config, span_idx, name="span_attention_head")
-        self.span_length_emb = Embedding(input_dim=self.max_span_width, output_dim=config['span_width_emb'], name='span_width_emb')
+        self.arg_endpoints_len = SpanEndpointsLength(arg_span_idx, name="arg_endpoints_and_length")
+        self.arg_attention = Attention(config, arg_span_idx, name="arg_attention_head")
+        self.arg_length_emb = Embedding(input_dim=self.max_arg_span, output_dim=config['span_width_emb'], name='arg_width_emb')
         self.concatenate_2 = Concatenate(name='arg_span_representation')
+
+        # Span representation for predicate 
+        if (self.max_pred_span > 1):
+            self.pred_endpoints_len = SpanEndpointsLength(pred_span_idx, name="pred_endpoints_and_length")
+            self.pred_attention = Attention(config, pred_span_idx, name="pred_attention_head")
+            self.pred_length_emb = Embedding(input_dim=self.max_pred_span, output_dim=config['span_width_emb'], name="pred_width_emb")
+            self.concatenate_3 = Concatenate(name='pred_span_representation')
 
         # Unary score
         self.pred_unary = Scoring(config, 1, name='pred_unary_score')
@@ -47,6 +54,8 @@ class SRL(Model):
         self.compute_score = ComputeScoring(self.num_labels, name='compute_final_score')
 
         self.softmax = Softmax(name="softmax_labels")
+
+
     def call(self, inputs): 
         # Shape word_emb: (batch_size, max_tokens, emb)
         # Shape elmo_emb: (batch_size, max_tokens, emb)
@@ -65,16 +74,28 @@ class SRL(Model):
         mlp_arg_out = self.mlp_arg(token_rep) # Shape: (batch_size, max_tokens, mlp_units)
 
         # Span representation for argument
-        # Shape span_start_emb, span_end_emb: (batch_size, num_spans, emb)
-        span_start_emb, span_end_emb, span_length = self.span_endpoints_len(mlp_arg_out) 
-        span_head_emb = self.span_attention(mlp_arg_out)
-        # Shape span_length: (batch_size, num_spans)
-        span_width_emb = self.span_length_emb(span_length)
+        # Shape arg_start_emb, arg_end_emb: (batch_size, num_spans, emb)
+        # Shape arg_length: (batch_size, num_spans)
+        arg_start_emb, arg_end_emb, arg_length = self.arg_endpoints_len(mlp_arg_out) 
+        # Shape arg_head_emb, arg_width_emb: (batch_size, num_spans, emb)
+        arg_head_emb = self.arg_attention(mlp_arg_out)
+        arg_width_emb = self.arg_length_emb(arg_length)
         # Shape arg_rep: (batch_size, num_args, emb)
-        arg_rep = self.concatenate_2([span_start_emb, span_end_emb, span_head_emb, span_width_emb])
+        arg_rep = self.concatenate_2([arg_start_emb, arg_end_emb, arg_head_emb, arg_width_emb])
 
-        # Shape pred_rep: (batch_size, num_preds, emb)
-        pred_rep = mlp_pred_out
+        if (self.max_pred_span > 1):
+            # Span representation for predicate
+            # Shape pred_start_emb, pred_end_emb: (batch_size, num_spans, emb)
+            # Shape pred_length: (batch_size, num_spans)
+            pred_start_emb, pred_end_emb, pred_length = self.pred_endpoints_len(mlp_pred_out) 
+            # Shape pred_head_emb, pred_width_emb: (batch_size, num_spans, emb)
+            pred_head_emb = self.pred_attention(mlp_pred_out)
+            pred_width_emb = self.pred_length_emb(pred_length)
+            # Shape pred_rep: (batch_size, num_preds, emb)
+            pred_rep = self.concatenate_3([pred_start_emb, pred_end_emb, pred_head_emb, pred_width_emb])
+        else:
+            # Shape pred_rep: (batch_size, num_preds, emb)
+            pred_rep = mlp_pred_out
 
         # Unary score for predicate and argument
         # Shape pred_unary_score: (batch_size, num_preds, 1)
@@ -83,21 +104,27 @@ class SRL(Model):
         arg_unary_score = self.arg_unary(arg_rep)
 
         # Scoring for predicate-argument pair
-        # Shape pred_arg_emb: (batch_size, num_args, num_preds, emb)
+        # Shape pred_arg_emb: (batch_size, num_preds, num_args, emb)
         pred_arg_emb = self.pred_arg_pair([arg_rep, pred_rep])
-        # Shape pred_arg_emb: (batch_size, num_args, num_preds, num_labels)
+        # Shape pred_arg_emb: (batch_size, num_preds, num_args, emb)
         pred_arg_score = self.pred_arg_score(pred_arg_emb)
-        relation_score = self.biaffine_score([arg_rep, pred_rep])
+        relation_score = self.biaffine_score([pred_rep, arg_rep])
 
-        # Shape final_score: (batch_size, num_args, num_preds, num_labels+1) 1= null label
+        # Shape final_score: (batch_size, num_preds, num_args, num_labels+1) 1= null label
         final_score = self.compute_score([arg_unary_score, pred_unary_score, pred_arg_score, relation_score])
         # Shape out: (batch_size, num_args, num_preds, num_labels+1) 1= null label
         out = self.softmax(final_score)
         return out
 
-    def model(self):
+    def build(self):
         word_emb = Input(shape=(self.max_tokens, 200))
         elmo_emb = Input(shape=(self.max_tokens, 100))
         char = Input(shape=(self.max_tokens, self.max_char))
         inputs = [word_emb, elmo_emb, char]
-        return Model(inputs=inputs, outputs=self.call(inputs))
+        self.model = Model(inputs=inputs, outputs=self.call(inputs))
+
+    def summary(self, line_length=None, positions=None, print_fn=None):
+        return self.model.summary(line_length, positions, print_fn)
+
+    def save_model(self, filename=''):
+        self.model.save('/models/tmp'+filename)

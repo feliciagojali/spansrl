@@ -2,11 +2,16 @@ import sys
 import json
 from models import SRL
 
+def print_default():
+    print('Configurations name not found.. Using the default config..')
+
 def main():
+    default = 'default'
+
     if (len(sys.argv) == 1):
         print('Attach which configurations you want to use for the model!') 
-        print('Configurations name not found.. Using the default config..')
-        config = 'default'
+        print_default()
+        config = default
     else :
         config = sys.argv[1]
 
@@ -17,13 +22,14 @@ def main():
     try:
         config = all_config[config]
     except:
-        print('Configurations name not found.. Using the default config..')
-        config = all_config['default']
+        print_default()
+        config = all_config[default]
 
-    max_tokens = config['max_tokens']
-    max_char = config['max_char']
     model = SRL(config)
-    model.model().summary()
+
+    model.build()
+    model.summary()
+    model.save_model()
 
 if __name__ == "__main__":
     main()
