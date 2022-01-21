@@ -61,14 +61,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                         end = id
                         start = id
 
-            print(new_id)
-            print(del_arr)
-            print(arr)
-
             el_del = [item for sublist in del_arr for item in sublist[1:]]
-            print(el_del)
-            print('---')
-            # Count average
             mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
             # Prepare out vector
             filtered_out = np.delete(out, el_del, axis=1)
@@ -79,6 +72,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                 filtered_out = out
             out = filtered_out[0]
         bert_features.append(out)
+        print(out.shape)
     return bert_features
 
         
