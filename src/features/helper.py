@@ -35,27 +35,27 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         # New id to contain the average value
         new_id = []
         
-        def add_data(sum):
+        def add_data(new_id, arr, del_arr, sum):
             if (len(del_arr) == 0):
                 new_id.append(start-1)
             else :
                 start_id = start - sum + len(new_id) -1
-            new_id.append(start_id)
+                new_id.append(start_id)
             temp = [start-1, end]
             temp_del = [i for i in range(start-1, end+1)]
             arr.append(temp)
             del_arr.append(temp_del)
-            return len(temp_del)
+            return new_id, arr, del_arr, len(temp_del)
 
         for i, id in enumerate(subword_list):
             if (id == end + 1):
                 end = id
                 if (i == len(subword_list) -1):
-                    temp = add_data(sum)
+                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
                     sum += temp
             else :
                 if (i - 1 >= 0):
-                    temp = add_data(sum)
+                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
                     sum += temp
                     end = id
                     start = id
@@ -63,7 +63,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         print(new_id)
         print(del_arr)
         print(arr)
-        
+
         el_del = [item for sublist in del_arr for item in sublist[1:]]
         # Count average
         mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
