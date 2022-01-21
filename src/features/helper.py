@@ -8,7 +8,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         print('sentence= ')
         print(sentence)
         # Get bert token (subword)
-        tokens = tokenizer(' '.join(sentence))
+        tokens = tokenizer.tokenize(' '.join(sentence))
         print('tokens=')
         print(tokens)
         # Get max length needed if word token
