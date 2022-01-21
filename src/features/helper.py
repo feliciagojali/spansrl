@@ -25,53 +25,56 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         subword_list = np.where(is_subword == True)
         subword_list = subword_list[0].tolist()
 
-        start = subword_list[0]
-        end = subword_list[0]
-        # Id endpoints subword
-        arr = []
-        sum = 0
-        # Elements that're going to be deleted
-        del_arr = []
-        # New id to contain the average value
-        new_id = []
-        
-        def add_data(new_id, arr, del_arr, sum):
-            if (len(del_arr) == 0):
-                new_id.append(start-1)
-            else :
-                start_id = start - sum + len(new_id) -1
-                new_id.append(start_id)
-            temp = [start-1, end]
-            temp_del = [i for i in range(start-1, end+1)]
-            arr.append(temp)
-            del_arr.append(temp_del)
-            return new_id, arr, del_arr, len(temp_del)
+        if (len(subword_list) != 0):
+            start = subword_list[0]
+            end = subword_list[0]
+            # Id endpoints subword
+            arr = []
+            sum = 0
+            # Elements that're going to be deleted
+            del_arr = []
+            # New id to contain the average value
+            new_id = []
+            
+            def add_data(new_id, arr, del_arr, sum):
+                if (len(del_arr) == 0):
+                    new_id.append(start-1)
+                else :
+                    start_id = start - sum + len(new_id) -1
+                    new_id.append(start_id)
+                temp = [start-1, end]
+                temp_del = [i for i in range(start-1, end+1)]
+                arr.append(temp)
+                del_arr.append(temp_del)
+                return new_id, arr, del_arr, len(temp_del)
 
-        for i, id in enumerate(subword_list):
-            if (id == end + 1):
-                end = id
-                if (i == len(subword_list) -1):
-                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
-                    sum += temp
-            else :
-                if (i - 1 >= 0):
-                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
-                    sum += temp
+            for i, id in enumerate(subword_list):
+                if (id == end + 1):
                     end = id
-                    start = id
+                    if (i == len(subword_list) -1):
+                        new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                        sum += temp
+                else :
+                    if (i - 1 >= 0):
+                        new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                        sum += temp
+                        end = id
+                        start = id
 
-        print(new_id)
-        print(del_arr)
-        print(arr)
+            print(new_id)
+            print(del_arr)
+            print(arr)
 
-        el_del = [item for sublist in del_arr for item in sublist[1:]]
-        # Count average
-        mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
-        # Prepare out vector
-        filtered_out = np.delete(out, el_del, axis=1)
-        # Insert value
-        for id, vec in zip(new_id, mean_value):
-            filtered_out[0][id] = vec
+            el_del = [item for sublist in del_arr for item in sublist[1:]]
+            # Count average
+            mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
+            # Prepare out vector
+            filtered_out = np.delete(out, el_del, axis=1)
+            # Insert value
+            for id, vec in zip(new_id, mean_value):
+                filtered_out[0][id] = vec
+            else:
+                filtered_out = out
         bert_features.append(filtered_out)
     return bert_features
 
