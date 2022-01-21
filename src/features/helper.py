@@ -25,6 +25,15 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         subword_list = np.where(is_subword == True)
         subword_list = subword_list[0].tolist()
 
+        start = subword_list[0]
+        end = subword_list[0]
+        # Id endpoints subword
+        arr = []
+        sum = 0
+        # Elements that're going to be deleted
+        del_arr = []
+        # New id to contain the average value
+        new_id = []
         
         def add_data(sum):
             if (len(del_arr) == 0):
@@ -38,15 +47,6 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
             del_arr.append(temp_del)
             return len(temp_del)
 
-        start = subword_list[0]
-        end = subword_list[0]
-        # Id endpoints subword
-        arr = []
-        sum = 0
-        # Elements that're going to be deleted
-        del_arr = []
-        # New id to contain the average value
-        new_id = []
         for i, id in enumerate(subword_list):
             if (id == end + 1):
                 end = id
@@ -60,6 +60,10 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                     end = id
                     start = id
 
+        print(new_id)
+        print(del_arr)
+        print(arr)
+        
         el_del = [item for sublist in del_arr for item in sublist[1:]]
         # Count average
         mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
