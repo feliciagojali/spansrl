@@ -5,11 +5,15 @@ import torch
 def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
     bert_features = []
     for sentence in sentences:
+        print('sentence= ')
+        print(sentence)
         # Get bert token (subword)
         tokens = tokenizer(' '.join(sentence))
+        print('tokens=')
         print(tokens)
         # Get max length needed if word token
         max_len = max_tokens + len(tokens) - len(sentence) + 2
+        print('max_len')
         print(max_len)
         # Total padding
         num_pad = max_len - len(tokens) - 2
