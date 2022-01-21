@@ -70,15 +70,17 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
             print('new_id')
             print(new_id)
             el_del = [item for sublist in del_arr for item in sublist[1:]]
+            print('dele')
+            print(el_del)
             mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
             # Prepare out vector
             filtered_out = np.delete(out, el_del, axis=1)
             # Insert value
             for id, vec in zip(new_id, mean_value):
                 filtered_out[0][id] = vec
-            else:
-                filtered_out = out
-            out = filtered_out[0]
+        else:
+            filtered_out = out
+        out = filtered_out[0]
         bert_features.append(out)
         print(out.shape)
     return bert_features
