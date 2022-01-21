@@ -5,16 +5,10 @@ import torch
 def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
     bert_features = []
     for sentence in sentences:
-        print('sentence= ')
-        print(sentence)
         # Get bert token (subword)
         tokens = tokenizer.tokenize(' '.join(sentence))
-        print('tokens=')
-        print(tokens)
         # Get max length needed if word token
         max_len = max_tokens + len(tokens) - len(sentence) + 2
-        print('max_len')
-        print(max_len)
         # Total padding
         num_pad = max_len - len(tokens) - 2
         ## TO DO: Handle Truncating
@@ -29,8 +23,6 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         is_subword = np.array(offset)[:,0] != 0
         subword_list = np.where(is_subword == True)
         subword_list = subword_list[0].tolist()
-        print('subword')
-        print(subword_list)
         if (len(subword_list) != 0):
             start = subword_list[0]
             end = subword_list[0]
@@ -67,11 +59,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                         end = id
                         start = id
 
-            print('new_id')
-            print(new_id)
             el_del = [item for sublist in del_arr for item in sublist[1:]]
-            print('dele')
-            print(el_del)
             mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
             # Prepare out vector
             filtered_out = np.delete(out, el_del, axis=1)
@@ -82,7 +70,6 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
             filtered_out = out
         out = filtered_out[0]
         bert_features.append(out)
-        print(out.shape)
     return bert_features
 
         
