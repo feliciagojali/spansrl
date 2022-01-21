@@ -14,7 +14,7 @@ def main():
 
     data = SRLData(all_config['default'])
     data.read_raw_data()
-    data.extract_features()
+    data.extract_bert()
 
 
 if __name__ == "__main__":
