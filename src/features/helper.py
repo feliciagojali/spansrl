@@ -31,12 +31,12 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                 new_id.append(start-1)
             else :
                 start_id = start - sum + len(new_id) -1
-                new_id.append(start_id)
-                temp = [start-1, end]
-                temp_del = [i for i in range(start-1, end+1)]
-                arr.append(temp)
-                del_arr.append(temp_del)
-                return len(temp_del)
+            new_id.append(start_id)
+            temp = [start-1, end]
+            temp_del = [i for i in range(start-1, end+1)]
+            arr.append(temp)
+            del_arr.append(temp_del)
+            return len(temp_del)
 
         start = subword_list[0]
         end = subword_list[0]
