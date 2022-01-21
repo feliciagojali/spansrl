@@ -16,4 +16,4 @@ fi
 cd $RAW_PATH
 
 echo "Downloading pretrained models"
-gdown --id 1vL8vyfJbaj3i91peTu738jq25N
+gdown --id 1vL8vyfJbaj3i91peTu738jq25N-yhsU3
