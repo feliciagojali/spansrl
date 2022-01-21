@@ -66,6 +66,8 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
             print(arr)
 
             el_del = [item for sublist in del_arr for item in sublist[1:]]
+            print(el_del)
+            print('---')
             # Count average
             mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
             # Prepare out vector

@@ -87,10 +87,12 @@ class SRLData(object):
                 
 
     def extract_bert(self):
-        self.bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, self.sentences, self.max_tokens, self.padding_side)
+        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, self.sentences, self.max_tokens, self.padding_side)
+        self.bert_emb = np.array(bert_emb)
+        print(self.bert_emb.shape)
         np.save('data/features/bert_emb.npy', self.bert_emb)
 
-    def extract_emb_features(self):
+    def extract_emb(self):
         padded = pad_input(self.sentences, self.max_tokens)
         word_emb = np.ones(shape=(len(self.sentences), self.max_tokens, 300))
         for i, sent in enumerate(padded):
@@ -101,6 +103,7 @@ class SRLData(object):
                     word_vec = self.word_vec[word.lower()]
                 word_emb[i][j] = word_vec
         self.word_emb = word_emb
+        print(self.word_emb.shape)
         np.save('data/features/word_emb.npy', word_emb)
 
     def read_raw_data(self):
