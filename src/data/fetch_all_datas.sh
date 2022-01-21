@@ -16,4 +16,4 @@ fi
 cd $RAW_PATH
 
 echo "Downloading pretrained models"
-gdown "https://drive.google.com/file/d/1vL8vyfJbaj3i91peTu738jq25N-yhsU3/view?usp=sharing"
+gdown --id 1vL8vyfJbaj3i91peTu738jq25N
