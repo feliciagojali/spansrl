@@ -77,7 +77,8 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                 filtered_out[0][id] = vec
             else:
                 filtered_out = out
-        bert_features.append(filtered_out)
+            out = filtered_out[0]
+        bert_features.append(out)
     return bert_features
 
         
