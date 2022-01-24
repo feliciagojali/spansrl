@@ -39,8 +39,11 @@ class SRLData(object):
         self.arg_list = []
 
         # Features Input
-
+        ## Character
+        self.char_dict = label_encode(config['char_list'])
+        self.char_input = []
         ## Word Embedding
+        self.padded_sent = []
         self.padding_side = config['padding_side']
         self.word_vec = fasttext.load_facebook_vectors(config['word_emb_path'])
         self.word_emb = []
@@ -95,23 +98,29 @@ class SRLData(object):
         # self.output = tf.tensor_scatter_nd_update(initialData, indices, updates)
     
 
-    def extract_features(self, array=False, isTraining=True, isSum=False):
-        if (array):
+    def extract_features(self, isTraining=True, isSum=False):
+        self.padded_sent(isArray=isSum and not isTraining)
+        if (isSum):
             # berishin dulu
             cleaned_sent = []
             if (isTraining):
                 sentences = np.array(cleaned_sent).flatten()
                 self.bert_emb = self.extract_bert_emb(sentences)
-                self.word_emb = self.extract_emb(sentences)
+                self.word_emb = self.extract_emb(sentences, self.padded_sent)
+                self.char_input = self.extract_char(sentences)
             else:
-                self.bert_emb = [self.extract_bert_emb(sent)[0] for sent in cleaned_sent]
-                self.word_emb = [self.extract_emb(sent)[0] for sent in cleaned_sent]   
+                # Documents
+                self.bert_emb = [self.extract_bert_emb(sent) for sent in cleaned_sent]
+                self.word_emb = [self.extract_emb(sent, padded) for sent, padded in zip(cleaned_sent, self.padded_sent)]   
+                self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
         else:
             self.bert_emb = self.extract_bert_emb(self.sentences)
-            self.word_emb = self.extract_emb(self.sentences)
+            self.word_emb = self.extract_emb(self.sentences, self.padded_sent)
+            self.char_input = self.extract_char(self.sentences)
 
         self.save_emb(self.bert_emb, 'bert_emb', isTraining, isSum)
         self.save_emb(self.word_emb, 'word_emb', isTraining, isSum)
+        self.save_emb(self.char_input, 'char_input', isTraining, isSum)
         
     def extract_bert_emb(self, sentences): # sentences : Array (sent)
         bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.padding_side)
@@ -121,10 +130,9 @@ class SRLData(object):
         return bert_emb
         
 
-    def extract_emb(self, sentences):  # sentences : Array (sent)
-        padded = pad_input(sentences, self.max_tokens)
+    def extract_emb(self, sentences, padded_sent):  # sentences : Array (sent)
         word_emb = np.ones(shape=(len(sentences), self.max_tokens, 300))
-        for i, sent in enumerate(padded):
+        for i, sent in enumerate(padded_sent):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
                     word_vec = np.zeros(300)
@@ -134,8 +142,25 @@ class SRLData(object):
         print(word_emb.shape)
         print(word_emb)
         return word_emb
-        
     
+    def extract_char(self, sentences): # sentences: Array (sent)
+        char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char))
+        for i, sent in enumerate(sentences):
+            for j, word in enumerate(sent):
+                char_encoded = [self.char_dict[x] for x in word]
+                if (len(char_encoded) > self.max_char):
+                    char[i][j] = char_encoded[:self.max_char]
+                else:
+                    char[i][j][:len(char_encoded)] = char_encoded
+
+
+    def pad_sentences(self, isArray=False):
+        if (isArray):
+            padded = [pad_input(sent, self.max_tokens, pad_type=self.padding_side) for sent in self.sentences]
+        else:
+            padded = pad_input(self.sentences, self.max_tokens, pad_type=self.padding_side)
+        self.padded_sent = padded
+
     def save_emb(self, emb, type, isTraining=True, isSum=False):
         if (isTraining):
             filename = 'train_'

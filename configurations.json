@@ -10,6 +10,7 @@
         "char_filter_size": 50,
         "char_cnn_kernel_size": [3, 4, 5],
         "max_char": 52,
+        "char_list": " 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,-_()[]{}!?:;#'\"/\\%$`&=*+@^~|",
         "dropout_value": 0.4,
         "lstm_layers": 1,
         "lstm_units": 200,
