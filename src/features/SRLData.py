@@ -152,7 +152,8 @@ class SRLData(object):
                     char[i][j] = char_encoded[:self.max_char]
                 else:
                     char[i][j][:len(char_encoded)] = char_encoded
-
+        print(char)
+        return char
 
     def pad_sentences(self, isArray=False):
         if (isArray):
