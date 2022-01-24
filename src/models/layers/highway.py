@@ -3,6 +3,7 @@ from tensorflow.keras.layers import Layer,  Dense, Activation, Multiply, Add, La
 from tensorflow.keras import backend as K
 from tensorflow.keras.initializers import Constant
 
+# Adopted from https://github.com/ParikhKadam/Highway-Layer-Keras
 class Highway(Layer):
 
     activation = None

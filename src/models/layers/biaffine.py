@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 
+# Adopted from https://github.com/PaddlePaddle/PaddleNLP/tree/develop
+
 class BiAffine(Layer):
 
     activation = None

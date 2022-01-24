@@ -5,13 +5,15 @@ import torch
 def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
     bert_features = []
     for sentence in sentences:
+        # Truncate
+        if (len(sentence) > max_tokens):
+            sentence = sentence[:max_tokens]
         # Get bert token (subword)
         tokens = tokenizer.tokenize(' '.join(sentence))
         # Get max length needed if word token
         max_len = max_tokens + len(tokens) - len(sentence) + 2
         # Total padding
         num_pad = max_len - len(tokens) - 2
-        ## TO DO: Handle Truncating
         inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
         # Remove bos, eos
         input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
@@ -86,11 +88,19 @@ def remove_sep(inputs, pad, len_tokens, pad_type='left'):
     new_offset = np.delete(offset_ids, sep, axis=0)
     return new_ids, new_offset
 
-def pad_input(data, max_token, pad_char='<pad>'):
+def pad_input(data, max_token, pad_char='<pad>', pad_type='left'):
     padded_data = np.full(shape=(len(data), max_token), fill_value=pad_char, dtype='object')
     for i, sent in enumerate(data):
-        idx_start = max_token - len(sent)
-        padded_data[i][idx_start:] = sent
+        if (len(sent) >= max_token):
+            padded_data[i] = sent[:max_token]
+            continue
+    
+        if (pad_type == 'left'):
+            idx_start = max_token - len(sent)
+        else:
+            idx_start = 0
+
+        padded_data[i][idx_start:idx_start+len(sent)+1] = sent
     return padded_data
 
 def create_dict(data, switch=False):
@@ -122,6 +132,7 @@ def get_span_idx(input_idx, span_idx):
     start_idx, end_idx, _ = span_idx
 
     idx = -1
+    # idx = [Input2.index(y) for x, y in zip(Input1, Input2) if x == 'ss' and y == 'fo']
     for i, (s, e) in enumerate(zip(start_idx, end_idx)):
         if (start == s and end == e):
             idx = i

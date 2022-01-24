@@ -13,9 +13,8 @@ def main():
     all_config = json.load(f)
 
     data = SRLData(all_config['default'])
-    data.read_raw_data()
-    data.extract_bert()
-    data.extract_emb()
+    data.sentences = [["saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan"],["tahu","malu","mempertanyakan"]]
+    data.extract_features()
 
 
 if __name__ == "__main__":

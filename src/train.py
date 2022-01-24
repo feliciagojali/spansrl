@@ -29,7 +29,6 @@ def main():
 
     model.build()
     model.summary()
-    model.save_model()
 
 if __name__ == "__main__":
     main()
