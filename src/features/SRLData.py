@@ -99,7 +99,7 @@ class SRLData(object):
     
 
     def extract_features(self, isTraining=True, isSum=False):
-        self.padded_sent(isArray=isSum and not isTraining)
+        self.pad_sentences(isArray=isSum and not isTraining)
         if (isSum):
             # berishin dulu
             cleaned_sent = []
