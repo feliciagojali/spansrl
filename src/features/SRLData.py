@@ -148,7 +148,7 @@ class SRLData(object):
         for i, sent in enumerate(sentences):
             for j, word in enumerate(sent):
                 char_encoded = [self.char_dict[x] for x in word]
-                if (len(char_encoded) > self.max_char):
+                if (len(char_encoded) >= self.max_char):
                     char[i][j] = char_encoded[:self.max_char]
                 else:
                     char[i][j][:len(char_encoded)] = char_encoded
