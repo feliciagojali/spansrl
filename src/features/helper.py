@@ -1,3 +1,4 @@
+from re import sub
 from tqdm import tqdm
 import numpy as np
 import torch
@@ -8,15 +9,24 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         # Truncate
         if (len(sentence) > max_tokens):
             sentence = sentence[:max_tokens]
+        print('len(sentence)')
+
+        print(len(sentence))
         # Get bert token (subword)
         tokens = tokenizer.tokenize(' '.join(sentence))
+        print('len(tokens)')
+        print(len(tokens))
         # Get max length needed if word token
-        max_len = max_tokens + len(tokens) - len(sentence) + 2
+        max_len = max_tokens + len(tokens) - len(sentence) + 2       
+        print('max_len')
+        print(max_len)
         # Total padding
         num_pad = max_len - len(tokens) - 2
         inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
         # Remove bos, eos
         input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
+        print('len(input_ids)')
+        print(len(input_ids))
         x = torch.LongTensor(input_ids).view(1,-1)
         out = model(x)[0].cpu().detach().numpy()
 
@@ -25,6 +35,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
         is_subword = np.array(offset)[:,0] != 0
         subword_list = np.where(is_subword == True)
         subword_list = subword_list[0].tolist()
+        print(subword_list)
         if (len(subword_list) != 0):
             start = subword_list[0]
             end = subword_list[0]
@@ -60,7 +71,8 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                         sum += temp
                         end = id
                         start = id
-
+            print(new_id)
+            print(del_arr)
             el_del = [item for sublist in del_arr for item in sublist[1:]]
             mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
             # Prepare out vector
