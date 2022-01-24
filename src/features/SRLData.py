@@ -19,8 +19,6 @@ from transformers import AutoTokenizer, AutoModel
 from gensim.models import fasttext
 import torch 
 
-unk_label = '<unk>'
-pad_label = '<pad>'
 
 class SRLData(object):
     def __init__(self, config):
@@ -40,7 +38,8 @@ class SRLData(object):
 
         # Features Input
         ## Character
-        self.char_dict = label_encode(config['char_list'])
+        initial_char_dict = {"<pad>":0, "<unk>":1}
+        self.char_dict = label_encode(config['char_list'], initial_char_dict)
         self.char_input = []
         ## Word Embedding
         self.padded_sent = []
@@ -50,7 +49,7 @@ class SRLData(object):
 
         self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
         self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side=self.padding_side)
-        # self.bert_emb = []
+        self.bert_emb = []
         # Output
         self.output = []
 
@@ -147,7 +146,9 @@ class SRLData(object):
         char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char))
         for i, sent in enumerate(sentences):
             for j, word in enumerate(sent):
-                char_encoded = [self.char_dict[x] for x in word]
+                if (word == '<pad>'):
+                    continue
+                char_encoded = [self.char_dict[x]  if x in self.char_dict else self.char_dict['<unk>'] for x in word]
                 if (len(char_encoded) >= self.max_char):
                     char[i][j] = char_encoded[:self.max_char]
                 else:

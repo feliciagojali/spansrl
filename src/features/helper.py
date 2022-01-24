@@ -128,8 +128,11 @@ def split_first(data, separator):
     rest = arr[1:]
     return first, rest
 
-def label_encode(label_list):
-    label_dict = {}
+def label_encode(label_list, init=False):
+    if (init):
+        label_dict = init
+    else:
+        label_dict = {}
 
     for i in label_list:
         label_dict[i] = len(label_dict)
