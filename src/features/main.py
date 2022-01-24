@@ -13,7 +13,7 @@ def main():
     all_config = json.load(f)
 
     data = SRLData(all_config['default'])
-    data.sentences = [["saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan"],["tahu","malu","mempertanyakan"]]
+    data.sentences = [["saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan","saya","dimaafkan"],["tahu","malu","dimaafkan"]]
     data.extract_features()
 
 

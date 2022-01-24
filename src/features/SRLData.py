@@ -116,7 +116,8 @@ class SRLData(object):
     def extract_bert_emb(self, sentences): # sentences : Array (sent)
         bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.padding_side)
         bert_emb = np.array(bert_emb)
-        print(self.bert_emb.shape)
+        print(bert_emb)
+        print(bert_emb.shape)
         return bert_emb
         
 
@@ -130,7 +131,8 @@ class SRLData(object):
                 else:
                     word_vec = self.word_vec[word.lower()]
                 word_emb[i][j] = word_vec
-        print(self.word_emb.shape)
+        print(word_emb.shape)
+        print(word_emb)
         return word_emb
         
     
