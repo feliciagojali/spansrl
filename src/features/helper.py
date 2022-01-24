@@ -71,6 +71,9 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
                         sum += temp
                         end = id
                         start = id
+                        if (i == len(subword_list) -1):
+                            new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                            sum += temp
             print(new_id)
             print(del_arr)
             el_del = [item for sublist in del_arr for item in sublist[1:]]
