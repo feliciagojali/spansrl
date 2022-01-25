@@ -8,10 +8,10 @@ after = 0
 total = 0
 ## BERT functions
 def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
-    bert_features = [bert_sent(sent, model, tokenizer, max_tokens, pad_side) for sent in sentences]
+    bert_features = [bert_sent(sent, model, tokenizer, max_tokens, pad_side, i) for i, sent in enumerate(sentences)]
     return bert_features
 
-def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
+def bert_sent(sentence, model, tokenizer, max_tokens, pad_side, i):
     # Truncate
     if (len(sentence) > max_tokens):
         sentence = sentence[:max_tokens]
@@ -26,6 +26,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
     num_pad = max_len - len(tokens) - 2
     inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
     
+    start_time = time.time()
     # Remove bos, eos
     input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
 
@@ -36,6 +37,8 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
     # Get id of token which is subword
     is_subword =  [True if x[0] != 0 else False for x in offset]
     subword_list= [i for i, x in enumerate(is_subword) if x == True]
+    if (i==1):
+        print('before loop = ' + str(time.time() - start_time))
     if (len(subword_list) != 0):
         # total+=1
         start = subword_list[0]
@@ -48,7 +51,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
         # New id to contain the average value
         new_id = []
         
-        # start_time = time.time()
+        start_time = time.time()
         def add_data(new_id, arr, del_arr, sum):
             if (len(del_arr) == 0):
                 new_id.append(start-1)
@@ -77,7 +80,9 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
                 sum += temp
                 end = id
                 start = id
-        # for_loop += time.time() - start_time
+        if (i==1):
+            print('for loop = ' + str(time.time() - start_time))
+        start_time = time.time()
         # start_time = time.time()
         el_del = [item for sublist in del_arr for item in sublist[1:]]
         mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
@@ -86,6 +91,8 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
         # Insert value
         for id, vec in zip(new_id, mean_value):
             filtered_out[0][id] = vec
+        if (i==1):
+            print('after loop = ' + str(time.time() - start_time))
         # after += time.time() - start_time
     else:
         filtered_out = out
