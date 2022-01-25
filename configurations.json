@@ -1,9 +1,9 @@
 {
     "default": {
         "srl_labels": ["A0","A1","V","AM-TMP","AM-CAU","AM-LOC","A2","AM-DIR", "AM-MNR"],
-        "max_pred_span": 1,
-        "max_arg_span": 3,
-        "max_tokens": 5,
+        "max_pred_span": 2,
+        "max_arg_span": 20,
+        "max_tokens": 30,
         "num_srl_labels": 21,
         "char_vocab": 95,
         "char_output_dim": 8,
