@@ -3,99 +3,94 @@ from tqdm import tqdm
 import numpy as np
 import torch
 import time
+for_loop = 0
+after = 0
+total = 0
 ## BERT functions
 def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
-    bert_features = []
-    for i, sentence in enumerate(sentences):
-        # Truncate
-        if (len(sentence) > max_tokens):
-            sentence = sentence[:max_tokens]
-   
-        # Get bert token (subword)
-        start_time = time.time()
-        tokens = tokenizer.tokenize(' '.join(sentence))
-        if (i == 0):
-            print("--- %s seconds for tokenize ---" % (time.time() - start_time))
-
-        # Get max length needed if word token
-        max_len = max_tokens + len(tokens) - len(sentence) + 2       
-  
-        # Total padding
-        num_pad = max_len - len(tokens) - 2
-        start_time = time.time()
-        inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
-        if (i==0):
-            print("--- %s seconds for output ---" % (time.time() - start_time))
-        # Remove bos, eos
-        input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
-        start_time = time.time()
-
-        x = torch.LongTensor(input_ids).view(1,-1)
-        out = model(x)[0].cpu().detach().numpy()
-        if (i==0):
-            print("--- %s seconds for out ---" % (time.time() - start_time))
-        # Handle subword (Average)
-        start_time = time.time()
-        # Get id of token which is subword
-        is_subword = np.array(offset)[:,0] != 0
-        subword_list = np.where(is_subword == True)
-        subword_list = subword_list[0].tolist()
-        if (len(subword_list) != 0):
-            start = subword_list[0]
-            end = subword_list[0]
-            # Id endpoints subword
-            arr = []
-            sum = 0
-            # Elements that're going to be deleted
-            del_arr = []
-            # New id to contain the average value
-            new_id = []
-            
-            def add_data(new_id, arr, del_arr, sum):
-                if (len(del_arr) == 0):
-                    new_id.append(start-1)
-                else :
-                    start_id = start - sum + len(new_id) -1
-                    new_id.append(start_id)
-                temp = [start-1, end]
-                temp_del = [i for i in range(start-1, end+1)]
-                arr.append(temp)
-                del_arr.append(temp_del)
-                return new_id, arr, del_arr, len(temp_del)
-
-            for i, id in enumerate(subword_list):
-                if (i != len(subword_list)-1):
-                    if (subword_list[i+1] == id + 1):
-                        end = id + 1
-                    else:
-                        new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
-                        sum += temp
-                        end = subword_list[i+1]
-                        start = subword_list[i+1]
-                else:
-                    if (id == subword_list[i-1] + 1):
-                        end = id
-                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
-                    sum += temp
-                    end = id
-                    start = id
-
-            el_del = [item for sublist in del_arr for item in sublist[1:]]
-            mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
-            # Prepare out vector
-            filtered_out = np.delete(out, el_del, axis=1)
-            # Insert value
-            if (i==0):
-                print("--- %s seconds for subword ---" % (time.time() - start_time))
-            for id, vec in zip(new_id, mean_value):
-                filtered_out[0][id] = vec
-        else:
-            filtered_out = out
-        out = filtered_out[0]
-        bert_features.append(out)
+    bert_features = [bert_sent(sent, model, tokenizer, max_tokens, pad_side) for sent in sentences]
     return bert_features
 
+def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
+    # Truncate
+    if (len(sentence) > max_tokens):
+        sentence = sentence[:max_tokens]
+
+    # Get bert token (subword)
+    tokens = tokenizer.tokenize(' '.join(sentence))
+    
+    # Get max length needed if word token
+    max_len = max_tokens + len(tokens) - len(sentence) + 2       
+
+    # Total padding
+    num_pad = max_len - len(tokens) - 2
+    inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
+    
+    # Remove bos, eos
+    input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
+
+    x = torch.LongTensor(input_ids).view(1,-1)
+    out = model(x)[0].cpu().detach().numpy()
+    
+    # Handle subword (Average)
+    # Get id of token which is subword
+    is_subword =  [True if x[0] != 0 else False for x in offset]
+    subword_list= [i for i, x in enumerate(is_subword) if x == True]
+    if (len(subword_list) != 0):
+        # total+=1
+        start = subword_list[0]
+        end = subword_list[0]
+        # Id endpoints subword
+        arr = []
+        sum = 0
+        # Elements that're going to be deleted
+        del_arr = []
+        # New id to contain the average value
+        new_id = []
         
+        # start_time = time.time()
+        def add_data(new_id, arr, del_arr, sum):
+            if (len(del_arr) == 0):
+                new_id.append(start-1)
+            else :
+                start_id = start - sum + len(new_id) -1
+                new_id.append(start_id)
+            temp = [start-1, end]
+            temp_del = [i for i in range(start-1, end+1)]
+            arr.append(temp)
+            del_arr.append(temp_del)
+            return new_id, arr, del_arr, len(temp_del)
+
+        for i, id in enumerate(subword_list):
+            if (i != len(subword_list)-1):
+                if (subword_list[i+1] == id + 1):
+                    end = id + 1
+                else:
+                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                    sum += temp
+                    end = subword_list[i+1]
+                    start = subword_list[i+1]
+            else:
+                if (id == subword_list[i-1] + 1):
+                    end = id
+                new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                sum += temp
+                end = id
+                start = id
+        # for_loop += time.time() - start_time
+        # start_time = time.time()
+        el_del = [item for sublist in del_arr for item in sublist[1:]]
+        mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
+        # Prepare out vector
+        filtered_out = np.delete(out, el_del, axis=1)
+        # Insert value
+        for id, vec in zip(new_id, mean_value):
+            filtered_out[0][id] = vec
+        # after += time.time() - start_time
+    else:
+        filtered_out = out
+    return filtered_out[0]
+
 def remove_sep(inputs, pad, len_tokens, pad_type='left'):
     ids = inputs['input_ids']
     offset_ids = inputs['offset_mapping']
@@ -104,10 +99,11 @@ def remove_sep(inputs, pad, len_tokens, pad_type='left'):
     else:
         start_id = 0
     end_id = start_id + len_tokens + 1
-    sep = [start_id, end_id]
-    new_ids = np.delete(ids,sep)
-    new_offset = np.delete(offset_ids, sep, axis=0)
-    return new_ids, new_offset
+    del ids[end_id]
+    del ids[start_id]
+    del offset_ids[end_id]
+    del offset_ids[start_id]
+    return ids, offset_ids
 
 def pad_input(data, max_token, pad_char='<pad>', pad_type='left'):
     padded_data = np.full(shape=(len(data), max_token), fill_value=pad_char, dtype='object')
