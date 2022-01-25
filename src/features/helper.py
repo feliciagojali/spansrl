@@ -11,7 +11,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
     bert_features = [bert_sent(sent, model, tokenizer, max_tokens, pad_side, i) for i, sent in enumerate(sentences)]
     return bert_features
 
-def bert_sent(sentence, model, tokenizer, max_tokens, pad_side, i):
+def bert_sent(sentence, model, tokenizer, max_tokens, pad_side, ss):
     # Truncate
     if (len(sentence) > max_tokens):
         sentence = sentence[:max_tokens]
@@ -26,18 +26,21 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side, i):
     num_pad = max_len - len(tokens) - 2
     inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
     
-    start_time = time.time()
     # Remove bos, eos
-    input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
+    start_time = time.time()
 
+    input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
+    if (ss==1):
+        print('remove sep = ' + str(time.time() - start_time))
     x = torch.LongTensor(input_ids).view(1,-1)
     out = model(x)[0].cpu().detach().numpy()
     
+    start_time = time.time()
     # Handle subword (Average)
     # Get id of token which is subword
     is_subword =  [True if x[0] != 0 else False for x in offset]
     subword_list= [i for i, x in enumerate(is_subword) if x == True]
-    if (i==1):
+    if (ss==1):
         print('before loop = ' + str(time.time() - start_time))
     if (len(subword_list) != 0):
         # total+=1
@@ -80,7 +83,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side, i):
                 sum += temp
                 end = id
                 start = id
-        if (i==1):
+        if (ss==1):
             print('for loop = ' + str(time.time() - start_time))
         start_time = time.time()
         # start_time = time.time()
@@ -91,7 +94,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side, i):
         # Insert value
         for id, vec in zip(new_id, mean_value):
             filtered_out[0][id] = vec
-        if (i==1):
+        if (ss==1):
             print('after loop = ' + str(time.time() - start_time))
         # after += time.time() - start_time
     else:
