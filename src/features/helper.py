@@ -28,12 +28,15 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
             print("--- %s seconds for output ---" % (time.time() - start_time))
         # Remove bos, eos
         input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
-    
+        start_time = time.time()
+
         x = torch.LongTensor(input_ids).view(1,-1)
         out = model(x)[0].cpu().detach().numpy()
-
+        if (i==0):
+            print("--- %s seconds for out ---" % (time.time() - start_time))
         # Handle subword (Average)
-        # Get id of token which is subwor
+        start_time = time.time()
+        # Get id of token which is subword
         is_subword = np.array(offset)[:,0] != 0
         subword_list = np.where(is_subword == True)
         subword_list = subword_list[0].tolist()
@@ -82,6 +85,8 @@ def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
             # Prepare out vector
             filtered_out = np.delete(out, el_del, axis=1)
             # Insert value
+            if (i==0):
+                print("--- %s seconds for subword ---" % (time.time() - start_time))
             for id, vec in zip(new_id, mean_value):
                 filtered_out[0][id] = vec
         else:
