@@ -17,7 +17,7 @@ import tensorflow as tf
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel
 from gensim.models import fasttext
-import torch 
+import time
 
 
 class SRLData(object):
@@ -122,14 +122,16 @@ class SRLData(object):
         self.save_emb(self.char_input, 'char_input', isTraining, isSum)
         
     def extract_bert_emb(self, sentences): # sentences : Array (sent)
+        start_time = time.time()
         bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.padding_side)
         bert_emb = np.array(bert_emb)
-        print(bert_emb)
-        print(bert_emb.shape)
+        print("shape bert= "+ str(bert_emb.shape))
+        print("--- %s seconds ---" % (time.time() - start_time))
         return bert_emb
         
 
     def extract_emb(self, sentences, padded_sent):  # sentences : Array (sent)
+        start_time = time.time()
         word_emb = np.ones(shape=(len(sentences), self.max_tokens, 300))
         for i, sent in enumerate(padded_sent):
             for j, word in enumerate(sent):
@@ -138,11 +140,12 @@ class SRLData(object):
                 else:
                     word_vec = self.word_vec[word.lower()]
                 word_emb[i][j] = word_vec
-        print(word_emb.shape)
-        print(word_emb)
+        print("shape emb= " + str(word_emb.shape))
+        print("--- %s seconds ---" % (time.time() - start_time))
         return word_emb
     
     def extract_char(self, sentences): # sentences: Array (sent)
+        start_time = time.time()
         char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char))
         for i, sent in enumerate(sentences):
             for j, word in enumerate(sent):
@@ -153,8 +156,8 @@ class SRLData(object):
                     char[i][j] = char_encoded[:self.max_char]
                 else:
                     char[i][j][:len(char_encoded)] = char_encoded
-        print(char.shape)
-        print(char)
+        print("char shape =" +str(char.shape))
+        print("--- %s seconds ---" % (time.time() - start_time))
         return char
 
     def pad_sentences(self, isArray=False):
