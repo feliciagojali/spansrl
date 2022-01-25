@@ -28,7 +28,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
     
     # Remove bos, eos
 
-    input_ids, offset = remove_new(inputs, num_pad, len(tokens), pad_side)
+    input_ids, offset = remove_new(inputs)
   
     x = torch.LongTensor(input_ids).view(1,-1)
     out = model(x)[0].cpu().detach().numpy()
