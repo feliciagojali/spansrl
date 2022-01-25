@@ -2,23 +2,30 @@ from re import sub
 from tqdm import tqdm
 import numpy as np
 import torch
+import time
 ## BERT functions
 def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
     bert_features = []
-    for sentence in sentences:
+    for i, sentence in enumerate(sentences):
         # Truncate
         if (len(sentence) > max_tokens):
             sentence = sentence[:max_tokens]
    
         # Get bert token (subword)
+        start_time = time.time()
         tokens = tokenizer.tokenize(' '.join(sentence))
-    
+        if (i == 0):
+            print("--- %s seconds for tokenize ---" % (time.time() - start_time))
+
         # Get max length needed if word token
         max_len = max_tokens + len(tokens) - len(sentence) + 2       
   
         # Total padding
         num_pad = max_len - len(tokens) - 2
+        start_time = time.time()
         inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
+        if (i==0):
+            print("--- %s seconds for output ---" % (time.time() - start_time))
         # Remove bos, eos
         input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
     
