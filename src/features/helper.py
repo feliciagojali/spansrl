@@ -28,7 +28,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
     
     # Remove bos, eos
 
-    input_ids, offset = remove_sep(inputs, num_pad, len(tokens), pad_side)
+    input_ids, offset = remove_new(inputs, num_pad, len(tokens), pad_side)
   
     x = torch.LongTensor(input_ids).view(1,-1)
     out = model(x)[0].cpu().detach().numpy()
@@ -90,6 +90,17 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
     else:
         filtered_out = out
     return filtered_out[0]
+
+def remove_new(inputs):
+    ids = inputs['input_ids']
+    offset_ids = inputs['offset_mapping']
+    start_id = ids.index(2)
+    ids.pop(start_id)
+    offset_ids.pop(start_id)
+    end_id = ids.index(3)
+    ids.pop(end_id)
+    offset_ids.pop(end_id)  
+    return ids, offset_ids
 
 def remove_sep(inputs, pad, len_tokens, pad_type='left'):
     ids = inputs['input_ids']
