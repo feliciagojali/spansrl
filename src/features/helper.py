@@ -43,7 +43,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
         start = subword_list[0]
         end = subword_list[0]
         # Id endpoints subword
-        arr = []
+        # arr = []
         sum = 0
         # Elements that're going to be deleted
         del_arr = []
@@ -56,9 +56,9 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
             else :
                 start_id = start - sum + len(new_id) -1
                 new_id.append(start_id)
-            temp = [start-1, end]
+            # temp = [start-1, end]
             temp_del = [i for i in range(start-1, end+1)]
-            arr.append(temp)
+            # arr.append(temp)
             del_arr.append(temp_del)
             return new_id, arr, del_arr, len(temp_del)
 
@@ -80,7 +80,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
                 start = id
         # start_time = time.time()
         el_del = [item for sublist in del_arr for item in sublist[1:]]
-        mean_value = [np.mean(out[0][i:j+1], axis=0) for i,j in arr]
+        mean_value = [np.mean(out[0][x[0]:x[-1]], axis=0) for x in del_arr]
         # Prepare out vector
         filtered_out = np.delete(out, el_del, axis=1)
         # Insert value
@@ -103,6 +103,17 @@ def remove_sep(inputs, pad, len_tokens, pad_type='left'):
     del ids[start_id]
     del offset_ids[end_id]
     del offset_ids[start_id]
+    return ids, offset_ids
+
+def remove_new(inputs):
+    ids = inputs['input_ids']
+    offset_ids = inputs['offset_mapping']
+    start_id = ids.index(2)
+    ids.pop(start_id)
+    offset_ids.pop(start_id)
+    end_id = ids.index(3)
+    ids.pop(end_id)
+    offset_ids.pop(end_id)  
     return ids, offset_ids
 
 def pad_input(data, max_token, pad_char='<pad>', pad_type='left'):
