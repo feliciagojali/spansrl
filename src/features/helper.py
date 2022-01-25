@@ -50,7 +50,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
         # New id to contain the average value
         new_id = []
         
-        def add_data(new_id, arr, del_arr, sum):
+        def add_data(new_id, del_arr, sum):
             if (len(del_arr) == 0):
                 new_id.append(start-1)
             else :
@@ -60,21 +60,21 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
             temp_del = [i for i in range(start-1, end+1)]
             # arr.append(temp)
             del_arr.append(temp_del)
-            return new_id, arr, del_arr, len(temp_del)
+            return new_id, del_arr, len(temp_del)
 
         for i, id in enumerate(subword_list):
             if (i != len(subword_list)-1):
                 if (subword_list[i+1] == id + 1):
                     end = id + 1
                 else:
-                    new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                    new_id, del_arr,temp = add_data(new_id, del_arr, sum)
                     sum += temp
                     end = subword_list[i+1]
                     start = subword_list[i+1]
             else:
                 if (id == subword_list[i-1] + 1):
                     end = id
-                new_id, arr, del_arr,temp = add_data(new_id, arr, del_arr, sum)
+                new_id, del_arr,temp = add_data(new_id, del_arr, sum)
                 sum += temp
                 end = id
                 start = id
