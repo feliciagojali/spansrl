@@ -73,16 +73,11 @@ class SRLData(object):
         num_preds = len(pred_start)
         num_args = len(arg_start)
         # Fill with null labels first
-        print('trying')
         initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels])
-        print('trying 2')
         initialLabel = np.ones([batch_size, num_preds, num_args, 1])
-        print('trying 3')
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
-        print('trying 4')
         indices = []
-        indices_null = []
-        for idx_sent, sentences in tqdm(enumerate(self.arg_list)):
+        for idx_sent, sentences in (enumerate(tqdm(self.arg_list))):
             for PAS in sentences:
                 id_pred_span = get_span_idx(PAS['id_pred'], self.pred_span_idx)
                 if (id_pred_span == -1):
@@ -100,13 +95,12 @@ class SRLData(object):
                         continue
                     indice_pas = [idx_sent, id_pred_span, id_arg_span, label_id]
                     # max length = num_labels + 1
-                    indice_reset = [idx_sent, id_pred_span, id_arg_span, self.num_labels]
                     indices.append(indice_pas)
-                    indices_null.append(indice_reset)
-        updates = [1 for _ in indices]
-        updates_null = [0 for _ in indices_null]
-        initialData =  tf.tensor_scatter_nd_update(initialData, indices_null, updates_null)
-        self.output = tf.tensor_scatter_nd_update(initialData, indices, updates)
+
+        for id in indices:
+            sent, num_pred, num_spans, idx = id
+            initialData[sent][num_pred][num_spans][idx] = 1
+            initialData[sent][num_pred][num_spans][self.num_labels] = 0
         save_emb(self.output, "train", "output")
         print(self.output.shape)
 
