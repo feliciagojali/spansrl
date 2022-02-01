@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Layer, Dense, Softmax
 class Attention(Layer):
     def __init__(self, config, span_idx, **kwargs):
         super(Attention, self).__init__(**kwargs)
-        self.num_heads = 1
+        self.num_heads = config['num_heads']
         self.dense = Dense(self.num_heads, activation='relu', name='head_scores')
         self.softmax = Softmax(axis=2)
         self.max_arg_span = config['max_arg_span']
@@ -27,10 +27,14 @@ class Attention(Layer):
         span_indices_mask = tf.sequence_mask(span_width, self.max_arg_span, dtype=tf.float32)
         span_indices_log_mask = tf.math.log(span_indices_mask)
 
-        # Shape span_head: (batch_size, num_spans, max_arg_span, 1)
+        # Shape span_head: (batch_size, num_spans, max_arg_span, num_heads)
         span_head = tf.gather(head_scores, span_indices, axis=1) + tf.tile(tf.expand_dims(span_indices_log_mask, -1), [1, 1, self.num_heads])
         span_head = self.softmax(span_head)
         
+        # Shape span_emb; (batch_size, num_spans, max_arg_span, emb, num_heads)
+        span_emb = tf.tile(tf.expand_dims(span_emb, -1), [1, 1, 1, 1, span_head.shape[-1]])
+        # Shape span_head: (batch_size, num_spans, max_arg_span, num_heads, 1)
+        span_head = tf.expand_dims(span_head, -1)
         # Shape out: (batch_size, num_spans, emb)
-        out = tf.reduce_sum(span_emb * span_head, 2)
+        out = tf.reduce_sum(tf.squeeze(tf.matmul(span_emb, span_head), -1), 2)
         return out
