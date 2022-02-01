@@ -13,7 +13,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel
 from gensim.models import fasttext, Word2Vec
 import time
-
+import sys
 
 class SRLData(object):
     def __init__(self, config):
@@ -236,7 +236,7 @@ class SRLData(object):
 
 
     def read_raw_data(self):
-        file = open(os.getcwd() +self.config['train_data'], 'r')
+        file = open(sys.path[0] +self.config['train_data'], 'r')
         lines = file.readlines()
         max = 0
         for pairs in lines:
