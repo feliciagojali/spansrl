@@ -29,13 +29,13 @@ def main():
         config = all_config[default]
 
     model = SRL(config)
-    features_1 = np.load(all_config[config]['features_1'])
-    features_2 = np.load(all_config[config]['features_2'])
-    features_3 = np.load(all_config[config]['features_3'])
-    batch_size = np.load(all_config[config]['batch_size'])
-    epochs = np.load(all_config[config]['epochs'])
+    features_1 = np.load(config['features_1'])
+    features_2 = np.load(config['features_2'])
+    features_3 = np.load(config['features_3'])
+    batch_size = np.load(config['batch_size'])
+    epochs = np.load(config['epochs'])
 
-    out = np.load(all_config[config]['train_out'])
+    out = np.load(config['train_out'])
     input = [features_1, features_2, features_3]
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3), loss=tf.keras.losses.CategoricalCrossentropy())
