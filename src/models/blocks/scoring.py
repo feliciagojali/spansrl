@@ -1,4 +1,3 @@
-from typing import final
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dense, Dropout, Add, Concatenate
 

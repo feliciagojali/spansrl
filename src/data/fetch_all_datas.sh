@@ -41,4 +41,4 @@ fi
 cd $FEATURES_PATH
 gdown --id 1shIQL_TuJBMnOKL0ZtqQEFrp58E654rp
 unzip batch1_ft
-rm batch1_ft  
+rm batch1_ft.zip
