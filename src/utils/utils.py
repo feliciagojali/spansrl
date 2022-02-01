@@ -1,3 +1,4 @@
+import numpy as np
 def create_span(length, max_span_length):
     span_start = []
     span_end = []
@@ -15,3 +16,19 @@ def create_span(length, max_span_length):
 
     # Shape span_start, span_end: [num_spans]
     return span_start, span_end, span_width
+
+def split_into_batch(data, batch, filename):
+    endpoint = len(data ) // batch
+    start = 0
+    for i in range(batch):
+        if (i != batch-1):
+            np.save(filename+str(i)+'.npy', data[start:start+endpoint])
+        else:
+            np.save(filename+str(i)+'.npy', data[start:])
+        start += endpoint
+
+def read_from_batch(filename, batch):
+    data = []
+    for i in range(batch):
+        data.append(np.load(filename+str(i)+'.npy'))
+    return np.concatenate(data)
