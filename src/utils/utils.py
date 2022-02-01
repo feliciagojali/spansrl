@@ -30,5 +30,5 @@ def split_into_batch(data, batch, filename):
 def read_from_batch(filename, batch):
     data = []
     for i in range(batch):
-        data.append(np.load(filename+str(i)+'.npy'))
+        data.append(np.load(filename+str(i)+'.npy', mmap_mode='r'))
     return np.concatenate(data)

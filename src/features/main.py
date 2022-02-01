@@ -15,10 +15,6 @@ def main():
     data = SRLData(all_config['default'])
     # data.read_raw_data()
     # data.extract_features("train")
-    x = np.load(all_config['default']['train_out'])
-    out = data.convert_result_to_readable(x[:10])
-    for i in out:
-        print(i)
         
    
 
