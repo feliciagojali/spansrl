@@ -77,6 +77,7 @@ class SRLData(object):
         initialLabel = np.ones([batch_size, num_preds, num_args, 1])
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
         indices = []
+        print('bisa')
         for idx_sent, sentences in (enumerate(tqdm(self.arg_list))):
             for PAS in sentences:
                 id_pred_span = get_span_idx(PAS['id_pred'], self.pred_span_idx)
@@ -96,7 +97,7 @@ class SRLData(object):
                     indice_pas = [idx_sent, id_pred_span, id_arg_span, label_id]
                     # max length = num_labels + 1
                     indices.append(indice_pas)
-
+        print('crash')
         for id in indices:
             sent, num_pred, num_spans, idx = id
             initialData[sent][num_pred][num_spans][idx] = 1
