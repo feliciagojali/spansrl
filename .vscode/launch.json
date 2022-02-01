@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "./src/features/main.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "[Main] Train",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/train.py",
+            "console": "integratedTerminal"
         }
     ]
 }

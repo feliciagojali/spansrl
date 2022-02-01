@@ -2,16 +2,20 @@ from re import sub
 from tqdm import tqdm
 import numpy as np
 import torch
-import time
-for_loop = 0
-after = 0
-total = 0
+import tensorflow as tf
 ## BERT functions
-def extract_bert(model, tokenizer, sentences, max_tokens, pad_side):
-    bert_features = [bert_sent(sent, model, tokenizer, max_tokens, pad_side) for  sent in sentences]
+def extract_bert(model, tokenizer, sentences, max_tokens):
+    bert_features = [bert_sent(sent, model, tokenizer, max_tokens) for  sent in sentences]
     return bert_features
 
-def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
+def save_emb(emb, type, trainType, isSum=False):
+    filename = trainType + '_'
+    if (isSum):
+        filename += 'sum_'
+    filename += type
+    np.save('data/features/' + filename + '.npy', emb)
+
+def bert_sent(sentence, model, tokenizer, max_tokens):
     # Truncate
     if (len(sentence) > max_tokens):
         sentence = sentence[:max_tokens]
@@ -22,13 +26,11 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
     # Get max length needed if word token
     max_len = max_tokens + len(tokens) - len(sentence) + 2       
 
-    # Total padding
-    num_pad = max_len - len(tokens) - 2
     inputs = tokenizer(sentence, padding="max_length",max_length=max_len, is_split_into_words=True, truncation=True, return_offsets_mapping=True)
     
     # Remove bos, eos
 
-    input_ids, offset = remove_new(inputs)
+    input_ids, offset = remove_sep(inputs, len(tokens))
   
     x = torch.LongTensor(input_ids).view(1,-1)
     out = model(x)[0].cpu().detach().numpy()
@@ -91,13 +93,10 @@ def bert_sent(sentence, model, tokenizer, max_tokens, pad_side):
         filtered_out = out
     return filtered_out[0]
 
-def remove_sep(inputs, pad, len_tokens, pad_type='left'):
+def remove_sep(inputs, len_tokens):
     ids = inputs['input_ids']
     offset_ids = inputs['offset_mapping']
-    if (pad_type == 'left'):
-        start_id = pad 
-    else:
-        start_id = 0
+    start_id = 0
     end_id = start_id + len_tokens + 1
     del ids[end_id]
     del ids[start_id]
@@ -105,30 +104,95 @@ def remove_sep(inputs, pad, len_tokens, pad_type='left'):
     del offset_ids[start_id]
     return ids, offset_ids
 
-def remove_new(inputs):
-    ids = inputs['input_ids']
-    offset_ids = inputs['offset_mapping']
-    start_id = ids.index(2)
-    ids.pop(start_id)
-    offset_ids.pop(start_id)
-    end_id = ids.index(3)
-    ids.pop(end_id)
-    offset_ids.pop(end_id)  
-    return ids, offset_ids
+def extract_pas_index(pas_list, tokens, max_tokens, max):
+    # Looping each PAS for every predicate
+    max_sent = -1
+    arg_list = []
+    for PAS in pas_list:
+        PAS = PAS.strip()
+        # Array: (num_labels) : (AO, A0..)
+        srl_labels = PAS.split(' ')
+        # Check label length and sentence length
+        if (len(srl_labels) != len(tokens)):
+            print('Tokens and labels do not sync = '+ str(tokens))
+            continue
 
-def pad_input(data, max_token, pad_char='<pad>', pad_type='left'):
+        srl_labels, pad_sent = pad_input([srl_labels, tokens], max_tokens, 'O')
+        sentence_args_pair = {
+            'id_pred': 0,
+            'pred': '',
+            'args': []
+        }
+        # Current labels such as = A0, A1, O
+        cur_label = srl_labels[0]
+        # start idx and end ix of each labels
+        start_idx = 0
+        end_idx = 0
+        for idx, srl_label in enumerate(srl_labels):
+            if (srl_label != cur_label):
+                if (cur_label == 'REL'):
+                    sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
+                    sentence_args_pair['id_pred'] = [start_idx,end_idx]
+                elif (cur_label != 'O') :
+                    temp = [start_idx, end_idx , cur_label]
+                    if (end_idx-start_idx + 1 > max):
+                        max = end_idx-start_idx + 1
+                        max_sent = tokens
+                    sentence_args_pair['args'].append(temp)
+                cur_label = srl_label
+                start_idx = idx
+            end_idx = idx
+        # Handle last label
+        if (cur_label == 'REL'):
+            sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
+            sentence_args_pair['id_pred'] = [start_idx,end_idx]
+        elif (cur_label != 'O') :
+            if (end_idx-start_idx + 1 > max):
+                max = end_idx-start_idx + 1
+                max_sent = tokens
+            temp = [start_idx, end_idx , cur_label]
+            sentence_args_pair['args'].append(temp)
+        # Append for different PAS, same sentences
+        if(sentence_args_pair['id_pred'] == 0):
+            print('These sentences do not have verb label in it ='+str(tokens))
+            continue
+        arg_list.append(sentence_args_pair)
+    return arg_list, max, max_sent
+
+def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_idx_mask=None, pred_idx_mask=None):
+    arr = [[] for _ in range(num_sent)]
+    cur_pred = 0
+    for id in ids:
+        sentence_args_pair = {
+            'id_pred': 0,
+            'args': []
+        }
+        sent, pred, arg, label = id
+        if (arg_idx_mask):
+            arg = arg_idx_mask[sent][arg]
+        arg_id_start = arg_span_idx[0][arg]
+        arg_id_end = arg_span_idx[1][arg]
+        arg_span = [arg_id_start, arg_id_end, labels_mapping[label]]
+        if pred == cur_pred :
+            arr[sent][-1]['args'].append(arg_span)
+        else :
+            if (pred_idx_mask):
+                pred = pred_idx_mask[sent][pred]
+            pred_id_start = pred_span_idx[0][pred]
+            pred_id_end = pred_span_idx[1][pred]
+            sentence_args_pair['id_pred'] = [pred_id_start, pred_id_end]
+            sentence_args_pair['args'].append(arg_span)
+            arr[sent].append(sentence_args_pair)
+        cur_pred = pred
+    return arr
+
+def pad_input(data, max_token, pad_char='<pad>'):
     padded_data = np.full(shape=(len(data), max_token), fill_value=pad_char, dtype='object')
     for i, sent in enumerate(data):
         if (len(sent) >= max_token):
             padded_data[i] = sent[:max_token]
             continue
-    
-        if (pad_type == 'left'):
-            idx_start = max_token - len(sent)
-        else:
-            idx_start = 0
-
-        padded_data[i][idx_start:idx_start+len(sent)+1] = sent
+        padded_data[i][:len(sent)] = sent
     return padded_data
 
 def create_dict(data, switch=False):
@@ -170,3 +234,14 @@ def get_span_idx(input_idx, span_idx):
             break
     
     return idx
+
+def check_pred_id(pred_id, pas_list):
+    arg_list = [x['args'] for x in pas_list if x['id_pred'] == pred_id]
+    return arg_list
+
+def _print_f1(total_gold, total_predicted, total_matched, message=""):
+    precision = 100.0 * total_matched / total_predicted if total_predicted > 0 else 0
+    recall = 100.0 * total_matched / total_gold if total_gold > 0 else 0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
+    print ("{}: Precision: {}, Recall: {}, F1: {}".format(message, precision, recall, f1))
+    return precision, recall, f1

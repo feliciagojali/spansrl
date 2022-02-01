@@ -15,5 +15,9 @@ fi
 
 cd $RAW_PATH
 
-echo "Downloading pretrained models"
+echo "Downloading pretrained models and data"
 gdown --id 1vL8vyfJbaj3i91peTu738jq25N-yhsU3
+gdown --id 1MQjcRLBCJsdk3AyCBWfAkltzRTHhI9ED
+unzip word2vec_news.model.wv.vectors.zip
+rm word2vec_news.model.wv.vectors.zip
+gdown --id 18f-dInJJPbuqXhHUdWpIeJ3XaBoERlh_

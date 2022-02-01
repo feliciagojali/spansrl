@@ -5,11 +5,11 @@ class CharacterEmbedding(Layer):
     def __init__(self, config, **kwargs):
         super(CharacterEmbedding, self).__init__(**kwargs)
         self.embedding = TimeDistributed(Embedding(config['char_vocab'], config['char_output_dim']), name='char_embedding')
-        self.dropout_1 = Dropout(config['char_dropout'])
+        self.dropout_1 = Dropout(config['emb_dropout'])
         self.conv1d_out = [TimeDistributed(Conv1D(kernel_size=kernel_sz, filters=config['char_filter_size'], padding='same',activation='relu', strides=1)) for kernel_sz in config['char_cnn_kernel_size']]    
         self.maxpool_out = [TimeDistributed(MaxPooling1D(config['max_char'])) for _ in config['char_cnn_kernel_size']]
         self.flatten = [TimeDistributed(Flatten()) for _ in config['char_cnn_kernel_size']]
-        self.dropout_2 = [Dropout(config['char_dropout']) for _ in config['char_cnn_kernel_size']]
+        self.dropout_2 = [Dropout(config['emb_dropout']) for _ in config['char_cnn_kernel_size']]
 
     def call(self, input): # Shape input: (batch_size, max_tokens, max_char)
         # Shape x: (batch_size, max_tokens, max_char, char_output_dim)

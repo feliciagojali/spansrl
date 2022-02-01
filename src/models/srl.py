@@ -1,9 +1,11 @@
 from tensorflow.keras.models import Model
 
 from tensorflow.keras.layers import Concatenate, Dropout, Dense, Embedding, Softmax, Input
-from models.blocks import Attention, BiHLSTM, SpanEndpointsLength, Scoring, ComputeScoring, CharacterEmbedding, PredicateArgumentEmb
+from models.blocks import Pruning, Attention, BiHLSTM, SpanEndpointsLength, Scoring, ComputeScoring, CharacterEmbedding, PredicateArgumentEmb
 from models.layers import BiAffine
 from utils.utils import create_span
+
+import tensorflow as tf
 
 class SRL(Model):
 
@@ -13,16 +15,16 @@ class SRL(Model):
         self.max_arg_span = config['max_arg_span']
         self.max_pred_span = config['max_pred_span']
         self.max_tokens = config['max_tokens']
-        self.num_labels = config['num_srl_labels']
+        self.num_labels = len(config['srl_labels'])
         self.max_char = config['max_char']
-        arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
-        pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
+        self.arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
+        self.pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
         # Blocks and Layers
         dropout_val = config['dropout_value']
         self.character_block = CharacterEmbedding(config, name="character_embedding")
         # More embedding layer for wword emb and elmo?
         self.concatenate_1 = Concatenate(name="token_representation")
-        self.dropout_1 = Dropout(dropout_val)
+        self.dropout_1 = Dropout(config['emb_dropout'])
 
         self.bihlstm = BiHLSTM(config, name="BiLSTM")
 
@@ -31,22 +33,29 @@ class SRL(Model):
         self.mlp_arg = Dense(config['mlp_arg_units'], activation='relu')       
 
         # Span representation for argument 
-        self.arg_endpoints_len = SpanEndpointsLength(arg_span_idx, name="arg_endpoints_and_length")
-        self.arg_attention = Attention(config, arg_span_idx, name="arg_attention_head")
-        self.arg_length_emb = Embedding(input_dim=self.max_arg_span, output_dim=config['span_width_emb'], name='arg_width_emb')
+        self.arg_endpoints_len = SpanEndpointsLength(self.arg_span_idx, name="arg_endpoints_and_length")
+        self.arg_attention = Attention(config, self.arg_span_idx, name="arg_attention_head")
+        self.arg_length_emb = Embedding(input_dim=self.max_arg_span+1, output_dim=config['span_width_emb'], name='arg_width_emb')
         self.concatenate_2 = Concatenate(name='arg_span_representation')
 
         # Span representation for predicate 
         if (self.max_pred_span > 1):
-            self.pred_endpoints_len = SpanEndpointsLength(pred_span_idx, name="pred_endpoints_and_length")
-            self.pred_attention = Attention(config, pred_span_idx, name="pred_attention_head")
-            self.pred_length_emb = Embedding(input_dim=self.max_pred_span, output_dim=config['span_width_emb'], name="pred_width_emb")
+            self.pred_endpoints_len = SpanEndpointsLength(self.pred_span_idx, name="pred_endpoints_and_length")
+            self.pred_attention = Attention(config, self.pred_span_idx, name="pred_attention_head")
+            self.pred_length_emb = Embedding(input_dim=self.max_pred_span+1, output_dim=config['max_pred_span'], name="pred_width_emb")
             self.concatenate_3 = Concatenate(name='pred_span_representation')
 
         # Unary score
         self.pred_unary = Scoring(config, 1, name='pred_unary_score')
         self.arg_unary = Scoring(config, 1, name='arg_unary_score')
     
+
+        # Pruning
+        self.arg_span_idx_mask = []
+        self.pred_span_idx_mask = []
+        self.pred_prune = Pruning(config['max_predicates'], name='pred_pruning')
+        self.arg_prune = Pruning(config['max_arguments'], name='arg_pruning')
+
         # Scoring for predicate-argument pair
         self.pred_arg_pair = PredicateArgumentEmb(name="pred_arg_pair")
         self.pred_arg_score = Scoring(config, self.num_labels, name="pred_arg_score")
@@ -56,7 +65,7 @@ class SRL(Model):
         self.softmax = Softmax(name="softmax_labels")
 
 
-    def call(self, inputs): 
+    def call(self, inputs, training=None): 
         # Shape word_emb: (batch_size, max_tokens, emb)
         # Shape elmo_emb: (batch_size, max_tokens, emb)
         # Shape char_input: (batch_size, max_tokens, max_char)
@@ -103,6 +112,21 @@ class SRL(Model):
         # Shape arg_unary_score: (batch_size, num_args, 1)
         arg_unary_score = self.arg_unary(arg_rep)
 
+        # Pruning in inference
+        if (not training) :
+            filtered_arg_idx = self.arg_prune(arg_unary_score)
+            filtered_pred_idx  = self.pred_prune(pred_unary_score)
+            self.arg_span_idx_mask = filtered_arg_idx
+            self.pred_span_idx_mask = filtered_pred_idx
+            arg_unary_score = tf.gather(arg_unary_score, filtered_arg_idx, axis=1, batch_dims=1)
+            pred_unary_score = tf.gather(pred_unary_score, filtered_pred_idx, axis=1, batch_dims=1)
+            # Shape arg_rep: (batch_size, max_args, emb)
+            arg_rep = tf.gather(arg_rep, filtered_arg_idx, axis=1, batch_dims=1)
+            # Shape pred_rep: (batch_size, max_preds, emb)
+            pred_rep = tf.gather(pred_rep, filtered_pred_idx, axis=1, batch_dims=1)
+          
+
+
         # Scoring for predicate-argument pair
         # Shape pred_arg_emb: (batch_size, num_preds, num_args, emb)
         pred_arg_emb = self.pred_arg_pair([arg_rep, pred_rep])
@@ -114,17 +138,10 @@ class SRL(Model):
         final_score = self.compute_score([arg_unary_score, pred_unary_score, pred_arg_score, relation_score])
         # Shape out: (batch_size, num_args, num_preds, num_labels+1) 1= null label
         out = self.softmax(final_score)
-        return out
-
-    def build(self):
-        word_emb = Input(shape=(self.max_tokens, 200))
-        elmo_emb = Input(shape=(self.max_tokens, 100))
-        char = Input(shape=(self.max_tokens, self.max_char))
-        inputs = [word_emb, elmo_emb, char]
-        self.model = Model(inputs=inputs, outputs=self.call(inputs))
-
-    def summary(self, line_length=None, positions=None, print_fn=None):
-        return self.model.summary(line_length, positions, print_fn)
+        if (training):
+            return out
+        else:
+            return out, filtered_pred_idx, filtered_arg_idx
 
     def save_model(self, filename=''):
         self.model.save('/models/tmp'+filename)

@@ -2,21 +2,21 @@
 
 import os
 import sys
+from collections import Counter
 
 from pkg_resources import ExtractionError
-
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from helper import split_first, label_encode, get_span_idx, pad_input, extract_bert
+from helper import _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 from utils.utils import create_span
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel
-from gensim.models import fasttext
+from gensim.models import fasttext, Word2Vec
 import time
 
 
@@ -27,7 +27,7 @@ class SRLData(object):
         self.max_arg_span = config['max_arg_span']
         self.max_pred_span = config['max_pred_span']
         self.max_tokens = config['max_tokens']
-        self.num_labels = config['num_srl_labels']
+        self.num_labels = len(config['srl_labels'])
         self.max_char = config['max_char']
         self.arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
         self.pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
@@ -41,15 +41,22 @@ class SRLData(object):
         initial_char_dict = {"<pad>":0, "<unk>":1}
         self.char_dict = label_encode(config['char_list'], initial_char_dict)
         self.char_input = []
-        ## Word Embedding
-        self.padded_sent = []
-        self.padding_side = config['padding_side']
-        self.word_vec = fasttext.load_facebook_vectors(config['word_emb_path'])
-        self.word_emb = []
 
-        self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
-        self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side=self.padding_side)
-        self.bert_emb = []
+        ## Word Embedding
+        self.use_fasttext = config['use_fasttext']
+        self.padded_sent = []
+        self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+        self.word_emb = []
+        self.emb1_dim = 300
+        if (config['use_fasttext']):
+            self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
+            self.word_emb_2 = []
+            self.emb2_dim = 300
+        else:
+            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
+            self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
+            self.word_emb_2 = []
+            self.emb2_dim = 768
         # Output
         self.output = []
 
@@ -66,13 +73,12 @@ class SRLData(object):
         num_preds = len(pred_start)
         num_args = len(arg_start)
         # Fill with null labels first
-        # initialTensor = tf.fill([batch_size, num_preds, num_args, self.num_labels+1], len(self.labels_mapping) + 1)
         initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels])
         initialLabel = np.ones([batch_size, num_preds, num_args, 1])
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
         indices = []
         indices_null = []
-        for idx_sent, sentences in enumerate(self.arg_list):
+        for idx_sent, sentences in tqdm(enumerate(self.arg_list)):
             for PAS in sentences:
                 id_pred_span = get_span_idx(PAS['id_pred'], self.pred_span_idx)
                 if (id_pred_span == -1):
@@ -83,71 +89,84 @@ class SRLData(object):
                     id_arg_span = get_span_idx(arg_idx, self.arg_span_idx)
                     if (id_arg_span == -1):
                         continue
-                    label_id = self.labels_mapping[arg[-1]]
+                    try :
+                        label_id = self.labels_mapping[arg[-1]]
+                    except:
+                        print(arg[-1])
+                        continue
                     indice_pas = [idx_sent, id_pred_span, id_arg_span, label_id]
-                    indice_reset = [idx_sent, id_pred_span, id_arg_span, self.num_labels + 1]
+                    # max length = num_labels + 1
+                    indice_reset = [idx_sent, id_pred_span, id_arg_span, self.num_labels]
                     indices.append(indice_pas)
                     indices_null.append(indice_reset)
-                    print(indice_pas)
-        print(indices)
-        print(indices_null)       
         updates = [1 for _ in indices]
         updates_null = [0 for _ in indices_null]
-        # initialData =  tf.tensor_scatter_nd_update(initialData, indices_null, updates_null)
-        # self.output = tf.tensor_scatter_nd_update(initialData, indices, updates)
-    
+        initialData =  tf.tensor_scatter_nd_update(initialData, indices_null, updates_null)
+        self.output = tf.tensor_scatter_nd_update(initialData, indices, updates)
+        save_emb(self.output, "train", "output")
+        print(self.output.shape)
 
-    def extract_features(self, isTraining=True, isSum=False):
-        self.pad_sentences(isArray=isSum and not isTraining)
+    def extract_features(self, type, isSum=False):
+        self.pad_sentences(isArray=isSum and type == 'test')
         if (isSum):
             # berishin dulu
             cleaned_sent = []
-            if (isTraining):
-                sentences = np.array(cleaned_sent).flatten()
-                self.bert_emb = self.extract_bert_emb(sentences)
-                self.word_emb = self.extract_emb(sentences, self.padded_sent)
-                self.char_input = self.extract_char(sentences)
-            else:
                 # Documents
-                self.bert_emb = [self.extract_bert_emb(sent) for sent in cleaned_sent]
-                self.word_emb = [self.extract_emb(sent, padded) for sent, padded in zip(cleaned_sent, self.padded_sent)]   
-                self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
+            self.word_emb = [self.extract_ft_emb(sent, padded) for sent, padded in zip(cleaned_sent, self.padded_sent)]   
+            self.word_emb_2 = [self.extract_sec_emb(sent) for sent in cleaned_sent]
+            self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
         else:
-            self.bert_emb = self.extract_bert_emb(self.sentences)
-            self.word_emb = self.extract_emb(self.sentences, self.padded_sent)
+            self.word_emb_2 = self.extract_word_emb(self.sentences, self.padded_sent)
+            self.word_emb = self.extract_ft_emb(self.sentences, self.padded_sent)
             self.char_input = self.extract_char(self.padded_sent)
 
-        self.save_emb(self.bert_emb, 'bert_emb', isTraining, isSum)
-        self.save_emb(self.word_emb, 'word_emb', isTraining, isSum)
-        self.save_emb(self.char_input, 'char_input', isTraining, isSum)
-        
+
+        save_emb(self.word_emb, 'word_emb', type, isSum)
+        if (self.use_fasttext):
+            name = 'fasttext'
+        else:
+            name = 'bert'
+        save_emb(self.word_emb_2, name, type, isSum)
+        save_emb(self.char_input, 'char_input', type, isSum)
+        print(self.word_emb.shape)
+        print(self.word_emb_2.shape)
+        print(self.char_input.shape)
+    
+    def extract_word_emb(self, sentences, padded_sent):
+        word_emb = np.zeros(shape=(len(sentences), self.max_tokens, 300))
+        for i, sent in tqdm(enumerate(padded_sent)):
+            for j, word in enumerate(sent):
+                if (word == '<pad>' or not self.word_vec.has_index_for(word.lower())):
+                    continue
+                word_vec = self.word_vec[word.lower()]
+                word_emb[i][j] = word_vec
+        return word_emb        
+
+    def extract_sec_emb(self, sentences):
+        if (self.use_fasttext):
+            return self.extract_ft_emb(sentences, self.padded_sent)
+        else:
+            return self.extract_bert_emb(sentences)
     def extract_bert_emb(self, sentences): # sentences : Array (sent)
-        start_time = time.time()
-        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.padding_side)
+        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens)
         bert_emb = np.array(bert_emb)
-        print("shape bert= "+ str(bert_emb.shape))
-        print("--- %s seconds ---" % (time.time() - start_time))
         return bert_emb
         
 
-    def extract_emb(self, sentences, padded_sent):  # sentences : Array (sent)
-        start_time = time.time()
+    def extract_ft_emb(self, sentences, padded_sent):  # sentences : Array (sent)
         word_emb = np.ones(shape=(len(sentences), self.max_tokens, 300))
-        for i, sent in enumerate(padded_sent):
+        for i, sent in tqdm(enumerate(padded_sent)):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
                     word_vec = np.zeros(300)
                 else:
-                    word_vec = self.word_vec[word.lower()]
+                    word_vec = self.fast_text[word.lower()]
                 word_emb[i][j] = word_vec
-        print("shape emb= " + str(word_emb.shape))
-        print("--- %s seconds ---" % (time.time() - start_time))
         return word_emb
     
     def extract_char(self, sentences): # sentences: Array (sent)
-        start_time = time.time()
         char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char))
-        for i, sent in enumerate(sentences):
+        for i, sent in tqdm(enumerate(sentences)):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
                     continue
@@ -156,84 +175,83 @@ class SRLData(object):
                     char[i][j] = char_encoded[:self.max_char]
                 else:
                     char[i][j][:len(char_encoded)] = char_encoded
-        print("char shape =" +str(char.shape))
-        print("--- %s seconds ---" % (time.time() - start_time))
         return char
 
     def pad_sentences(self, isArray=False):
         if (isArray):
-            padded = [pad_input(sent, self.max_tokens, pad_type=self.padding_side) for sent in self.sentences]
+            padded = [pad_input(sent, self.max_tokens) for sent in self.sentences]
         else:
-            padded = pad_input(self.sentences, self.max_tokens, pad_type=self.padding_side)
+            padded = pad_input(self.sentences, self.max_tokens)
         self.padded_sent = padded
 
-    def save_emb(self, emb, type, isTraining=True, isSum=False):
-        if (isTraining):
-            filename = 'train_'
-        else:
-            filename = 'test_'
-        if (isSum):
-            filename += 'sum_'
-        filename += type
-        np.save('data/features/' + filename + '.npy', emb)
+    def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
+        labels_list = list(self.labels_mapping.keys())
+        transpose = tf.transpose(out, [3, 0, 1, 2])
+        omit = tf.transpose(transpose[:-1], [1, 2, 3, 0])
+        #array of position
+        ids = tf.where(omit)
+        pas = convert_idx(ids, len(out), self.arg_span_idx, self.pred_span_idx, labels_list, arg_mask, pred_mask)
+        return pas
+
+    def evaluate(self, y, pred):
+        # Adopted from unisrl
+        total_gold = 0
+        total_pred = 0
+        total_matched = 0
+        total_unlabeled_matched = 0
+        comp_sents = 0
+        label_confusions = Counter()
+
+        for y_sent, pred_sent in zip(y, pred):
+            gold_rels = 0
+            pred_rels = 0
+            matched = 0
+            for gold_pas in y_sent:
+                pred_id = gold_pas['id_pred']
+                gold_args = gold_pas['args']
+                total_gold += len(gold_args)
+                gold_rels += len(gold_args)
+                
+                arg_list_in_predict = check_pred_id(pred_id, pred_sent)
+                if (len(arg_list_in_predict) == 0):
+                    continue
+                for arg0 in gold_args:
+                    for arg1 in arg_list_in_predict[0]:
+                        if (arg0[:-1] == arg1[:-1]): # Right span
+                            total_unlabeled_matched += 1
+                            label_confusions.update([(arg0[2], arg1[2]),])
+                            if (arg0[2] == arg1[2]): # Right label
+                                total_matched += 1
+                                matched += 1
+            for pred_pas in pred_sent:
+                pred_id = pred_pas['id_pred']
+                pred_args = pred_pas['args']
+                total_pred += len(pred_args)
+                pred_rels += len(pred_args)
+            
+            if (gold_rels == matched and pred_rels == matched):
+                comp_sents += 1
+
+        precision, recall, f1 = _print_f1(total_gold, total_pred, total_matched, "SRL")
+        ul_prec, ul_recall, ul_f1 = _print_f1(total_gold, total_pred, total_unlabeled_matched, "Unlabeled SRL")
+        
+        return
+
 
     def read_raw_data(self):
         file = open(os.getcwd() + self.config['train_data'], 'r')
         lines = file.readlines()
-        
-        errorData = []
+        max = 0
         for pairs in lines:
             # Split sent, label list
             sent, PASList = split_first(pairs, ';')
             tokens = sent.split(' ')
-
-            arg_list = []
-
-            # Looping each PAS for every predicate
-            for PAS in PASList:
-                # Array: (num_labels) : (AO, A0..)
-                srl_labels = PAS.split(' ')
-
-                # Check label length and sentence length
-                if (len(srl_labels) != len(tokens)):
-                    errorData.append(sent)
-                    break
-
-                srl_labels, pad_sent = pad_input([srl_labels, tokens], self.max_tokens, 'O', self.padding_side)
-                sentence_args_pair = {
-                    'id_pred': 0,
-                    'pred': '',
-                    'args': []
-                }
-                # Current labels such as = A0, A1, O
-                cur_label = srl_labels[0]
-                # start idx and end ix of each labels
-                start_idx = 0
-                end_idx = 0
-                for idx, srl_label in enumerate(srl_labels):
-                    if (srl_label != cur_label):
-                        if (cur_label == 'V'):
-                            sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
-                            sentence_args_pair['id_pred'] = [start_idx,end_idx]
-                        elif (cur_label != 'O') :
-                            temp = [start_idx, end_idx , cur_label]
-                            sentence_args_pair['args'].append(temp)
-                        cur_label = srl_label
-                        start_idx = idx
-                    end_idx = idx
-                # Handle last label
-                if (cur_label == 'V'):
-                    sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
-                    sentence_args_pair['id_pred'] = [start_idx,end_idx]
-                elif (cur_label != 'O') :
-                    temp = [start_idx, end_idx , cur_label]
-                    sentence_args_pair['args'].append(temp)
-                # Append for different PAS, same sentences
-                arg_list.append(sentence_args_pair)
+            arg_list, max, sent = extract_pas_index(PASList, tokens, self.max_tokens, max)
 
             # Append for differents sentences
             self.sentences.append(tokens)
             self.arg_list.append(arg_list)
-        print(self.sentences)
-        print(self.arg_list)
+        print('max args = '+ str(max))
+        print('di sentence '+ str(sent))
+
         
