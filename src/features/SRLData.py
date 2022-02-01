@@ -113,8 +113,8 @@ class SRLData(object):
                 self.word_emb_2 = self.extract_word_emb(sentences, padded_sent)
             else:
                 self.word_emb_2 = self.extract_bert_emb(sentences)    
-            self.word_emb = self.extract_ft_emb(sentences, padded_sent)
-            self.char_input = self.extract_char(padded_sent)
+            # self.word_emb = self.extract_ft_emb(sentences, padded_sent)
+            # self.char_input = self.extract_char(padded_sent)
 
 
         # save_emb(self.word_emb, 'word_emb', type, isSum)
