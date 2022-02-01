@@ -9,7 +9,7 @@ def extract_bert(model, tokenizer, sentences, max_tokens):
     return bert_features
 
 def save_emb(emb, type, trainType, isSum=False):
-    filename = trainType + '_'
+    filename=''
     if (isSum):
         filename += 'sum_'
     filename += type

@@ -37,18 +37,16 @@ class SRLData(object):
 
         ## Word Embedding
         self.use_fasttext = config['use_fasttext']
-        # self.word_vec = Word2Vec.load(config['word_emb_path']).wv
-        # self.word_emb = []
-        # self.emb1_dim = 300
-        if (config['use_fasttext']):
-            self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
-            self.word_emb_2 = []
-            self.emb2_dim = 300
-        else:
-            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
-            self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
-            self.word_emb_2 = []
-            self.emb2_dim = 768
+        self.emb1_dim = 300
+        
+        self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
+        self.word_emb_ft = []
+        self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+        self.word_emb_w2v = []
+        # self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
+        # self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
+        # self.word_emb_2 = []
+        # self.emb2_dim = 768
         # Output
         self.output = []
 
@@ -109,23 +107,19 @@ class SRLData(object):
             self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            if (self.use_fasttext):
-                self.word_emb_2 = self.extract_word_emb(sentences, padded_sent)
-            else:
-                self.word_emb_2 = self.extract_bert_emb(sentences)    
-            # self.word_emb = self.extract_ft_emb(sentences, padded_sent)
+            self.word_emb_w2v = self.extract_word_emb(sentences, padded_sent)
+            self.word_emb_ft = self.extract_ft_emb(sentences, padded_sent)
+            # self.word_emb_2 = self.extract_bert_emb(sentences)    
             # self.char_input = self.extract_char(padded_sent)
 
 
-        # save_emb(self.word_emb, 'word_emb', type, isSum)
-        if (self.use_fasttext):
-            name = 'fasttext'
-        else:
-            name = 'bert'
-        save_emb(self.word_emb_2, name, type, isSum)
+        save_emb(self.word_emb_w2v, 'word_emb_w2v', type, isSum)
+        save_emb(self.word_emb_ft, 'word_emb_ft', type, isSum)
+
+        # save_emb(self.word_emb_2, 'bert', type, isSum)
         # save_emb(self.char_input, 'char_input', type, isSum)
         # print(self.word_emb.shape)
-        print(self.word_emb_2.shape)
+        # print(self.word_emb_2.shape)
         # print(self.char_input.shape)
     
     def extract_word_emb(self, sentences, padded_sent):

@@ -35,16 +35,18 @@ FEATURES_PATH="./features"
 
 # cd ".."
 
-# if [ ! -d $FEATURES_PATH ]; then
-#   mkdir -p $FEATURES_PATH
-# fi
+if [ ! -d $FEATURES_PATH ]; then
+  mkdir -p $FEATURES_PATH
+fi
 
-# cd $FEATURES_PATH
-# gdown --id 1IA7sG2TfTJ4exIUSL5aameVsr7EK6Ccw
-# unzip batch1
-# rm batch1.zip
+cd $FEATURES_PATH
 
-# cd ".."
+echo "Downloading features"
+gdown --id 1eTzSCfEPJPpa-EhnW8pisQuNHN0BTyWr
+unzip features_b1
+rm features_b1.zip
+
+cd ".."
 
 if [ ! -d $PROCESSED_PATH ]; then
   mkdir -p $PROCESSED_PATH
