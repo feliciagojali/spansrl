@@ -143,5 +143,3 @@ class SRL(Model):
         else:
             return out, filtered_pred_idx, filtered_arg_idx
 
-    def save_model(self, filename=''):
-        self.model.save('/models/tmp'+filename)
