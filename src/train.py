@@ -29,9 +29,9 @@ def main():
         config = all_config[default]
 
     model = SRL(config)
-    features_1 = np.load(config['features_1'])
-    features_2 = np.load(config['features_2'])
-    features_3 = np.load(config['features_3'])
+    features_1 = np.load(config['features_1'], mmap_mode='r')
+    features_2 = np.load(config['features_2'], mmap_mode='r')
+    features_3 = np.load(config['features_3'], mmap_mode='r')
     batch_size = config['batch_size']
     epochs = config['epochs']
     out = np.load(config['train_out'], mmap_mode='r')
