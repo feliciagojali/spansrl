@@ -116,8 +116,11 @@ class SRLData(object):
             self.word_emb_2 = [self.extract_sec_emb(sent) for sent in cleaned_sent]
             self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
         else:
+            print('extracting word emb 2 features')
             self.word_emb_2 = self.extract_word_emb(self.sentences, self.padded_sent)
+            print('extracting word emb features')
             self.word_emb = self.extract_ft_emb(self.sentences, self.padded_sent)
+            print('extracting char features')
             self.char_input = self.extract_char(self.padded_sent)
 
 
