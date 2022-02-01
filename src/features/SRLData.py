@@ -67,8 +67,8 @@ class SRLData(object):
         num_preds = len(pred_start)
         num_args = len(arg_start)
         # Fill with null labels first
-        initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels])
-        initialLabel = np.ones([batch_size, num_preds, num_args, 1])
+        initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels], dtype='int16')
+        initialLabel = np.ones([batch_size, num_preds, num_args, 1], dtype='int16')
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
         indices = []
         for idx_sent, sentences in (enumerate(tqdm(arg_list))):
@@ -109,21 +109,24 @@ class SRLData(object):
             self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            self.word_emb_2 = self.extract_word_emb(sentences, padded_sent)
+            if (self.use_fasttext):
+                self.word_emb_2 = self.extract_word_emb(sentences, padded_sent)
+            else:
+                self.word_emb_2 = self.extract_bert_emb(sentences)    
             self.word_emb = self.extract_ft_emb(sentences, padded_sent)
             self.char_input = self.extract_char(padded_sent)
 
 
-        save_emb(self.word_emb, 'word_emb', type, isSum)
+        # save_emb(self.word_emb, 'word_emb', type, isSum)
         if (self.use_fasttext):
             name = 'fasttext'
         else:
             name = 'bert'
         save_emb(self.word_emb_2, name, type, isSum)
-        save_emb(self.char_input, 'char_input', type, isSum)
-        print(self.word_emb.shape)
+        # save_emb(self.char_input, 'char_input', type, isSum)
+        # print(self.word_emb.shape)
         print(self.word_emb_2.shape)
-        print(self.char_input.shape)
+        # print(self.char_input.shape)
     
     def extract_word_emb(self, sentences, padded_sent):
         word_emb = np.zeros(shape=(len(sentences), self.max_tokens, 300))

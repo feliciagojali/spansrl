@@ -31,7 +31,7 @@
         "features_1": "data/features/train_word_emb.npy",
         "features_2":"data/features/train_fasttext.npy",
         "features_3": "data/features/train_char_input.npy",
-        "train_out": "data/features/output_train",
+        "train_out": "data/features/output_train.npy",
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy"

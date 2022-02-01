@@ -39,6 +39,6 @@ if [ ! -d $FEATURES_PATH ]; then
 fi
 
 cd $FEATURES_PATH
-gdown --id 1yGL9biWS5OAHASsF0zS9HHLQACp-glJq
-unzip batch1_new
-rm batch1_new.zip
+gdown --id 1IA7sG2TfTJ4exIUSL5aameVsr7EK6Ccw
+unzip batch1
+rm batch1.zip

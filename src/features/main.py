@@ -14,7 +14,8 @@ def main():
 
     data = SRLData(all_config['default'])
     # data.read_raw_data()
-    # data.extract_features("train")
+    data.extract_features("train")
+    # data.convert_train_output()
         
    
 

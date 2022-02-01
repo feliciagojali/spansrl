@@ -34,7 +34,7 @@ def main():
     features_3 = np.load(config['features_3'], mmap_mode='r')
     batch_size = config['batch_size']
     epochs = config['epochs']
-    out = read_from_batch(config['train_out'], 5)
+    out = np.load(config['train_out'], mmap_mode='r')
     input = [features_1, features_2, features_3]
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3), loss=tf.keras.losses.CategoricalCrossentropy())
