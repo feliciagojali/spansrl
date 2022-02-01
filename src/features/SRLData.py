@@ -253,7 +253,6 @@ class SRLData(object):
             # Append for differents sentences
             self.sentences.append(tokens)
             self.arg_list.append(arg_list)
-        print('max args = '+ str(max))
-        print('di sentence '+ str(sent))
+        return self.sentences, self.arg_list
 
         
