@@ -5,10 +5,6 @@ import sys
 from collections import Counter
 
 
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 from helper import _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 from utils.utils import create_span
 import numpy as np
@@ -240,7 +236,7 @@ class SRLData(object):
 
 
     def read_raw_data(self):
-        file = open(self.config['train_data'], 'r')
+        file = open(os.getcwd() +self.config['train_data'], 'r')
         lines = file.readlines()
         max = 0
         for pairs in lines:
