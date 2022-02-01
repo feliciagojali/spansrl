@@ -4,7 +4,6 @@ import os
 import sys
 from collections import Counter
 
-from pkg_resources import ExtractionError
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
@@ -241,7 +240,7 @@ class SRLData(object):
 
 
     def read_raw_data(self):
-        file = open(os.getcwd() + self.config['train_data'], 'r')
+        file = open(self.config['train_data'], 'r')
         lines = file.readlines()
         max = 0
         for pairs in lines:
