@@ -25,7 +25,7 @@
         "train_data": "/data/raw/batch1.csv",
         "word_emb_path":"data/pretrained/word2vec_news.model",
         "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
-        "batch_size": 16,
+        "batch_size": 8,
         "epochs": 80,
         "use_fasttext": true,
         "features_1": "data/features/train_word_emb.npy",
