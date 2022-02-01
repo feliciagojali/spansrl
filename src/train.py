@@ -29,18 +29,18 @@ def main():
         config = all_config[default]
 
     model = SRL(config)
+    features_1 = np.load(all_config[config]['features_1'])
+    features_2 = np.load(all_config[config]['features_2'])
+    features_3 = np.load(all_config[config]['features_3'])
+    batch_size = np.load(all_config[config]['batch_size'])
+    epochs = np.load(all_config[config]['epochs'])
 
+    out = np.load(all_config[config]['train_out'])
+    input = [features_1, features_2, features_3]
+    callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3), loss=tf.keras.losses.CategoricalCrossentropy())
-
-    emb1 = np.ones((5,30, 200))
-    emb2 = np.ones((5,30,100))
-    char = np.ones((5,30, 52))
-    output = np.zeros((5, 59, 410, 15))
-    out = np.ones((5, 59, 410, 1 ))
-    out = np.concatenate([output, out], axis=-1)
-    input = [emb1, emb2, char]
-    model.fit(input, out)
-    out, pred_idx_mask, arg_idx_mask = model.predict(input)
+    model.fit(input, out, batch_size=batch_size, epochs=epochs, callback=[callback])
+    model.save('default')
 
 if __name__ == "__main__":
     main()

@@ -15,6 +15,9 @@ def save_emb(emb, type, trainType, isSum=False):
     filename += type
     np.save('data/features/' + filename + '.npy', emb)
 
+def save_npy(filename, arr):
+    np.save(filename, arr)
+
 def bert_sent(sentence, model, tokenizer, max_tokens):
     # Truncate
     if (len(sentence) > max_tokens):
@@ -132,6 +135,7 @@ def extract_pas_index(pas_list, tokens, max_tokens, max):
             if (srl_label != cur_label):
                 if (cur_label == 'REL'):
                     sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
+                    print(sentence_args_pair['pred'])
                     sentence_args_pair['id_pred'] = [start_idx,end_idx]
                 elif (cur_label != 'O') :
                     temp = [start_idx, end_idx , cur_label]
@@ -145,6 +149,7 @@ def extract_pas_index(pas_list, tokens, max_tokens, max):
         # Handle last label
         if (cur_label == 'REL'):
             sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
+            print(sentence_args_pair['pred'])
             sentence_args_pair['id_pred'] = [start_idx,end_idx]
         elif (cur_label != 'O') :
             if (end_idx-start_idx + 1 > max):
@@ -162,6 +167,7 @@ def extract_pas_index(pas_list, tokens, max_tokens, max):
 def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_idx_mask=None, pred_idx_mask=None):
     arr = [[] for _ in range(num_sent)]
     cur_pred = 0
+    cur_sent = 0
     for id in ids:
         sentence_args_pair = {
             'id_pred': 0,
@@ -173,7 +179,7 @@ def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_
         arg_id_start = arg_span_idx[0][arg]
         arg_id_end = arg_span_idx[1][arg]
         arg_span = [arg_id_start, arg_id_end, labels_mapping[label]]
-        if pred == cur_pred :
+        if pred == cur_pred and sent == cur_sent :
             arr[sent][-1]['args'].append(arg_span)
         else :
             if (pred_idx_mask):
@@ -184,6 +190,7 @@ def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_
             sentence_args_pair['args'].append(arg_span)
             arr[sent].append(sentence_args_pair)
         cur_pred = pred
+        cur_sent = sent
     return arr
 
 def pad_input(data, max_token, pad_char='<pad>'):

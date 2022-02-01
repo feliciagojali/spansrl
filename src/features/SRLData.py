@@ -4,8 +4,10 @@ import os
 import sys
 from collections import Counter
 
-
-from helper import _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from helper import save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 from utils.utils import create_span
 import numpy as np
 import tensorflow as tf
@@ -27,10 +29,6 @@ class SRLData(object):
         self.arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
         self.pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
 
-        # Initial Data
-        self.sentences = []
-        self.arg_list = []
-
         # Features Input
         ## Character
         initial_char_dict = {"<pad>":0, "<unk>":1}
@@ -39,7 +37,6 @@ class SRLData(object):
 
         ## Word Embedding
         self.use_fasttext = config['use_fasttext']
-        self.padded_sent = []
         self.word_vec = Word2Vec.load(config['word_emb_path']).wv
         self.word_emb = []
         self.emb1_dim = 300
@@ -61,7 +58,9 @@ class SRLData(object):
 
     # To convert train data labels to output models
     def convert_train_output(self):
-        batch_size = len(self.sentences)
+        sentences = np.load(self.config['processed_sent'], allow_pickle=True)
+        arg_list = np.load(self.config['processed_arg_list'], allow_pickle=True)
+        batch_size = len(sentences)
         pred_start, _, _ = self.pred_span_idx
         arg_start, _, _ = self.arg_span_idx
 
@@ -72,8 +71,7 @@ class SRLData(object):
         initialLabel = np.ones([batch_size, num_preds, num_args, 1])
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
         indices = []
-        print('bisa')
-        for idx_sent, sentences in (enumerate(tqdm(self.arg_list))):
+        for idx_sent, sentences in (enumerate(tqdm(arg_list))):
             for PAS in sentences:
                 id_pred_span = get_span_idx(PAS['id_pred'], self.pred_span_idx)
                 if (id_pred_span == -1):
@@ -92,30 +90,28 @@ class SRLData(object):
                     indice_pas = [idx_sent, id_pred_span, id_arg_span, label_id]
                     # max length = num_labels + 1
                     indices.append(indice_pas)
-        print('crash')
         for id in indices:
             sent, num_pred, num_spans, idx = id
             initialData[sent][num_pred][num_spans][idx] = 1
             initialData[sent][num_pred][num_spans][self.num_labels] = 0
-        save_emb(self.output, "train", "output")
-        print(self.output.shape)
+        save_emb(initialData, "train", "output")
+        print(initialData.shape)
 
     def extract_features(self, type, isSum=False):
-        self.pad_sentences(isArray=isSum and type == 'test')
+        sentences = np.load(self.config['processed_sent'], allow_pickle=True)
+        # self.pad_sentences(sentences, isArray=isSum and type == 'test')
         if (isSum):
             # berishin dulu
             cleaned_sent = []
                 # Documents
-            self.word_emb = [self.extract_ft_emb(sent, padded) for sent, padded in zip(cleaned_sent, self.padded_sent)]   
+            self.word_emb = [self.extract_ft_emb(sent, padded) for sent, padded in zip(cleaned_sent, [])]   
             self.word_emb_2 = [self.extract_sec_emb(sent) for sent in cleaned_sent]
             self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
         else:
-            print('extracting word emb 2 features')
-            self.word_emb_2 = self.extract_word_emb(self.sentences, self.padded_sent)
-            print('extracting word emb features')
-            self.word_emb = self.extract_ft_emb(self.sentences, self.padded_sent)
-            print('extracting char features')
-            self.char_input = self.extract_char(self.padded_sent)
+            padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
+            self.word_emb_2 = self.extract_word_emb(sentences, padded_sent)
+            self.word_emb = self.extract_ft_emb(sentences, padded_sent)
+            self.char_input = self.extract_char(padded_sent)
 
 
         save_emb(self.word_emb, 'word_emb', type, isSum)
@@ -131,7 +127,7 @@ class SRLData(object):
     
     def extract_word_emb(self, sentences, padded_sent):
         word_emb = np.zeros(shape=(len(sentences), self.max_tokens, 300))
-        for i, sent in tqdm(enumerate(padded_sent)):
+        for i, sent in enumerate(padded_sent):
             for j, word in enumerate(sent):
                 if (word == '<pad>' or not self.word_vec.has_index_for(word.lower())):
                     continue
@@ -174,12 +170,12 @@ class SRLData(object):
                     char[i][j][:len(char_encoded)] = char_encoded
         return char
 
-    def pad_sentences(self, isArray=False):
+    def pad_sentences(self, sentences, isArray=False):
         if (isArray):
-            padded = [pad_input(sent, self.max_tokens) for sent in self.sentences]
+            padded = [pad_input(sent, self.max_tokens) for sent in sentences]
         else:
-            padded = pad_input(self.sentences, self.max_tokens)
-        self.padded_sent = padded
+            padded = pad_input(sentences, self.max_tokens)
+        save_npy(self.config['processed_padded_sent'], padded)
 
     def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
         labels_list = list(self.labels_mapping.keys())
@@ -236,9 +232,11 @@ class SRLData(object):
 
 
     def read_raw_data(self):
-        file = open(sys.path[0] +self.config['train_data'], 'r')
+        file = open(os.getcwd() +self.config['train_data'], 'r')
         lines = file.readlines()
         max = 0
+        sentences = []
+        arg_lists = []
         for pairs in lines:
             # Split sent, label list
             sent, PASList = split_first(pairs, ';')
@@ -246,8 +244,9 @@ class SRLData(object):
             arg_list, max, sent = extract_pas_index(PASList, tokens, self.max_tokens, max)
 
             # Append for differents sentences
-            self.sentences.append(tokens)
-            self.arg_list.append(arg_list)
-        return self.sentences, self.arg_list
+            sentences.append(tokens)
+            arg_lists.append(arg_list)
+        save_npy(self.config['processed_sent'], sentences)
+        save_npy(self.config['processed_arg_list'], arg_lists)
 
         

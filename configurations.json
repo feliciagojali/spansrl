@@ -22,11 +22,19 @@
         "mlp_pred_units": 150,
         "mlp_arg_units": 150,
         "span_width_emb": 20,
-        "train_data": "../../data/raw/batch1.csv",
-        "word_emb_path":"../../data/raw/word2vec_news.model",
-        "fasttext_emb_path": "../../data/raw/kyubyong.ft.id.bin",
+        "train_data": "/data/raw/batch1.csv",
+        "word_emb_path":"data/pretrained/word2vec_news.model",
+        "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
         "batch_size": 32,
-        "epoch": 80,
-        "use_fasttext": true
+        "epochs": 80,
+        "use_fasttext": true,
+        "features_1": "train_word_emb.npy",
+        "features_2":"train_fasttext.npy",
+        "features_3": "train_char_input.npy",
+        "train_out": "data/features/output_train.npy",
+        "processed_sent": "data/processed/sentences.npy",
+        "processed_arg_list": "data/processed/arg_list.npy",
+        "processed_padded_sent": "data/processed/padded_sent.npy"
+
     }
 }
