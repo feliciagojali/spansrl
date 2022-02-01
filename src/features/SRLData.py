@@ -37,9 +37,9 @@ class SRLData(object):
 
         ## Word Embedding
         self.use_fasttext = config['use_fasttext']
-        self.word_vec = Word2Vec.load(config['word_emb_path']).wv
-        self.word_emb = []
-        self.emb1_dim = 300
+        # self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+        # self.word_emb = []
+        # self.emb1_dim = 300
         if (config['use_fasttext']):
             self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
             self.word_emb_2 = []
