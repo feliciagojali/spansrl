@@ -73,9 +73,13 @@ class SRLData(object):
         num_preds = len(pred_start)
         num_args = len(arg_start)
         # Fill with null labels first
+        print('trying')
         initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels])
+        print('trying 2')
         initialLabel = np.ones([batch_size, num_preds, num_args, 1])
+        print('trying 3')
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
+        print('trying 4')
         indices = []
         indices_null = []
         for idx_sent, sentences in tqdm(enumerate(self.arg_list)):
