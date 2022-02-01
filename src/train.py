@@ -32,10 +32,10 @@ def main():
     features_1 = np.load(config['features_1'])
     features_2 = np.load(config['features_2'])
     features_3 = np.load(config['features_3'])
-    batch_size = np.load(config['batch_size'])
-    epochs = np.load(config['epochs'])
+    batch_size = config['batch_size']
+    epochs = config['epochs']
 
-    out = np.load(config['train_out'])
+    out = config['train_out']
     input = [features_1, features_2, features_3]
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3), loss=tf.keras.losses.CategoricalCrossentropy())
