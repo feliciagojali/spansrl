@@ -63,7 +63,7 @@ def main():
     #         print(len(typ))
 
     # Compiling, fitting and saving model
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3), loss=tf.keras.losses.CategoricalCrossentropy())
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss=tf.keras.losses.CategoricalCrossentropy())
     model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
     model.save('models/default_fasttext_'+str(config['use_fasttext']))
 

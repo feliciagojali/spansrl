@@ -9,7 +9,7 @@ class BiHLSTM(Layer):
         self.backwards = []
         self.highway = []
         self.concatenate = Concatenate(name='lstm_output')
-        self.dropout = Dropout(config['dropout_value'])
+        self.dropout = Dropout(config['lstm_dropout'])
         for i in range(config['lstm_layers']):
             self.forwards.append(LSTM(config['lstm_units'], return_sequences=True, name='lstm_forward_' +name+ str(i)))
             self.backwards.append(LSTM(config['lstm_units'], go_backwards=True, return_sequences=True, name='lstm_backward_'+name+str(i)))
