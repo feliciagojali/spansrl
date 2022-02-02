@@ -44,29 +44,40 @@ def main():
     input = [features_1, features_2, features_3]
     out = np.load(dir + config['output'], mmap_mode='r')
 
+    # Features loading
+    dir = config['features_dir'] +'val_'
+    if (not config['use_fasttext']):
+        features_1 = np.load(dir +config['features_1'], mmap_mode='r')
+    else :
+        features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
+    features_2 = np.load(dir+config['features_2'], mmap_mode='r')
+    features_3 = np.load(dir+config['features_3'], mmap_mode='r')
+    input_val = [features_1, features_2, features_3]
+    out_val = np.load(dir + config['output'], mmap_mode='r')
 
-    # Training Parameters
+    # # Training Parameters
     batch_size = config['batch_size']
     epochs = config['epochs']
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
 
     
     # Compiling, fitting and saving model
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss=tf.keras.losses.CategoricalCrossentropy())
-    model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
-    model.save('models/default_fasttext_'+str(config['use_fasttext']))
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss=tf.keras.losses.CategoricalCrossentropy())
+    model.fit(input, out, validation_data=(input_val, out_val), batch_size=batch_size, epochs=epochs, callbacks=[callback])
+    model.save('models/'+ config['model_path'])
 
 
     # Predicting, unload model
-    # data = SRLData(config, emb=False)
+    data = SRLData(config, emb=False)
 
-    # model = load_model(config['model_path'])
-    # pred, idx_pred, idx_arg = model.predict(input)
-    # res = data.convert_result_to_readable(pred, idx_arg, idx_pred)
-    # real = data.convert_result_to_readable(out)
-    # data.evaluate(real, res)
-    # for i in res:
-    #     print(i)
+    model = load_model(config['model_path'])
+    pred, idx_pred, idx_arg = model.predict(input)
+    res = data.convert_result_to_readable(pred, idx_arg, idx_pred)
+    real = data.convert_result_to_readable(out)
+    data.evaluate(real, res)
+    with open('1.txt', 'w') as f:
+        for item in res:
+            f.write("%s\n" %str(item))
 
      
 
