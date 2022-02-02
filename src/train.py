@@ -45,15 +45,15 @@ def main():
     out = np.load(dir + config['output'], mmap_mode='r')
 
     # Features loading
-    dir = config['features_dir'] +'val_'
-    if (not config['use_fasttext']):
-        features_1 = np.load(dir +config['features_1'], mmap_mode='r')
-    else :
-        features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
-    features_2 = np.load(dir+config['features_2'], mmap_mode='r')
-    features_3 = np.load(dir+config['features_3'], mmap_mode='r')
-    input_val = [features_1, features_2, features_3]
-    out_val = np.load(dir + config['output'], mmap_mode='r')
+    # dir = config['features_dir'] +'val_'
+    # if (not config['use_fasttext']):
+    #     features_1 = np.load(dir +config['features_1'], mmap_mode='r')
+    # else :
+    #     features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
+    # features_2 = np.load(dir+config['features_2'], mmap_mode='r')
+    # features_3 = np.load(dir+config['features_3'], mmap_mode='r')
+    # input_val = [features_1, features_2, features_3]
+    # out_val = np.load(dir + config['output'], mmap_mode='r')
 
     # # Training Parameters
     batch_size = config['batch_size']
