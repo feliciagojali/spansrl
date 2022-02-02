@@ -63,7 +63,7 @@ def main():
     
     # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss=tf.keras.losses.CategoricalCrossentropy())
-    model.fit(input, out, validation_data=(input_val, out_val), batch_size=batch_size, epochs=epochs, callbacks=[callback])
+    model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
     model.save('models/'+ config['model_path'])
 
 
