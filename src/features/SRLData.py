@@ -7,7 +7,7 @@ from collections import Counter
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-from helper import save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
+from features.helper import save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 from utils.utils import create_span
 import numpy as np
 import tensorflow as tf
@@ -18,7 +18,7 @@ import time
 import sys
 
 class SRLData(object):
-    def __init__(self, config):
+    def __init__(self, config, emb=True):
         self.config = config
         # Configurations and constants
         self.max_arg_span = config['max_arg_span']
@@ -38,15 +38,15 @@ class SRLData(object):
         ## Word Embedding
         self.use_fasttext = config['use_fasttext']
         self.emb1_dim = 300
-        
-        self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
-        self.word_emb_ft = []
-        self.word_vec = Word2Vec.load(config['word_emb_path']).wv
-        self.word_emb_w2v = []
-        # self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
-        # self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
-        # self.word_emb_2 = []
-        # self.emb2_dim = 768
+        if (emb):
+            self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
+            self.word_emb_ft = []
+            self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+            self.word_emb_w2v = []
+            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
+            self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
+            self.word_emb_2 = []
+            self.emb2_dim = 768
         # Output
         self.output = []
 
@@ -176,7 +176,12 @@ class SRLData(object):
 
     def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
         labels_list = list(self.labels_mapping.keys())
-        transpose = tf.transpose(out, [3, 0, 1, 2])
+        ## Max = 1
+        max_val = tf.reduce_max(out, axis=-1, keepdims=True)
+        cond = tf.equal(out, max_val)
+        out_ = tf.where(cond, tf.ones_like(out), tf.zeros_like(out))
+        ## Get Id
+        transpose = tf.transpose(out_, [3, 0, 1, 2])
         omit = tf.transpose(transpose[:-1], [1, 2, 3, 0])
         #array of position
         ids = tf.where(omit)

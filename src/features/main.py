@@ -15,16 +15,16 @@ def main():
     f = open(filename)
     all_config = json.load(f)
 
-    data = SRLData(all_config['default'])
+    data = SRLData(all_config['default'], False)
 
-    files = [path+'dev_summary_corpus.csv']
+    # files = [path+'dev_summary_corpus.csv']
 
-    datas = [pd.read_csv(file)['article'] for file in files]
-    for i in datas:
-        data.extract_features(i, 'val', True)
+    # datas = [pd.read_csv(file)['article'] for file in files]
+    # for i in datas:
+    #     data.extract_features(i, 'val', True)
    
-    # data.read_raw_data()
-    data.extract_features("train")
+    data.read_raw_data()
+    # data.extract_features("train")
     # data.convert_train_output()
         
    

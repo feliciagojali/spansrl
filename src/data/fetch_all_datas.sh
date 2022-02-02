@@ -43,18 +43,18 @@ cd $FEATURES_PATH
 
 echo "Downloading features"
 gdown --id 1eTzSCfEPJPpa-EhnW8pisQuNHN0BTyWr
-unzip features_b1
-rm features_b1.zip
+unzip train_features.zip
+rm train_features.zip
 
-cd ".."
+# cd ".."
 
-if [ ! -d $PROCESSED_PATH ]; then
-  mkdir -p $PROCESSED_PATH
-fi
+# if [ ! -d $PROCESSED_PATH ]; then
+#   mkdir -p $PROCESSED_PATH
+# fi
 
-cd $PROCESSED_PATH
+# cd $PROCESSED_PATH
 
-echo "Downloading processed data"
-gdown --id 1MwGa6GQKQU5ETqKTB3DdCDfIetH7edOv
-unzip batch1_processed.zip
-rm batch1_processed.zip
+# echo "Downloading processed data"
+# gdown --id 1MwGa6GQKQU5ETqKTB3DdCDfIetH7edOv
+# unzip batch1_processed.zip
+# rm batch1_processed.zip

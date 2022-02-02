@@ -166,15 +166,15 @@ def extract_pas_index(pas_list, tokens, max_tokens, max):
 
 def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_idx_mask=None, pred_idx_mask=None):
     arr = [[] for _ in range(num_sent)]
-    cur_pred = 0
-    cur_sent = 0
+    cur_pred = -1
+    cur_sent = -1
     for id in ids:
         sentence_args_pair = {
             'id_pred': 0,
             'args': []
         }
         sent, pred, arg, label = id
-        if (arg_idx_mask):
+        if (arg_idx_mask is not None):
             arg = arg_idx_mask[sent][arg]
         arg_id_start = arg_span_idx[0][arg]
         arg_id_end = arg_span_idx[1][arg]
@@ -182,14 +182,14 @@ def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_
         if pred == cur_pred and sent == cur_sent :
             arr[sent][-1]['args'].append(arg_span)
         else :
-            if (pred_idx_mask):
+            cur_pred = pred
+            if (pred_idx_mask is not None):
                 pred = pred_idx_mask[sent][pred]
             pred_id_start = pred_span_idx[0][pred]
             pred_id_end = pred_span_idx[1][pred]
             sentence_args_pair['id_pred'] = [pred_id_start, pred_id_end]
             sentence_args_pair['args'].append(arg_span)
             arr[sent].append(sentence_args_pair)
-        cur_pred = pred
         cur_sent = sent
     return arr
 
