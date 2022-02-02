@@ -46,6 +46,9 @@ gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
 unzip train_features.zip
 rm train_features.zip
 
+gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
+unzip val_features.zip
+rm val_features.zip
 # cd ".."
 
 # if [ ! -d $PROCESSED_PATH ]; then
