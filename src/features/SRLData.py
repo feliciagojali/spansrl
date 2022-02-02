@@ -95,9 +95,9 @@ class SRLData(object):
         save_emb(initialData, "train", "output")
         print(initialData.shape)
 
-    def extract_features(self, type, isSum=False):
-        sentences = np.load(self.config['processed_sent'], allow_pickle=True)
-        # self.pad_sentences(sentences, isArray=isSum and type == 'test')
+    def extract_features(self, sentences, type, isSum=False):
+        # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
+        self.pad_sentences(sentences, isArray=isSum)
         if (isSum):
             # berishin dulu
             cleaned_sent = []
