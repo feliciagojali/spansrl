@@ -42,7 +42,7 @@ fi
 cd $FEATURES_PATH
 
 echo "Downloading features"
-gdown --id 1pzFmB01Xr-UaJQY6UMm-_u6s8VZsY_Au
+gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
 unzip train_features.zip
 rm train_features.zip
 
