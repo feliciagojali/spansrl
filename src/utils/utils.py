@@ -1,4 +1,6 @@
+from sklearn.model_selection import train_test_split
 import numpy as np
+
 def create_span(length, max_span_length):
     span_start = []
     span_end = []
@@ -17,18 +19,16 @@ def create_span(length, max_span_length):
     # Shape span_start, span_end: [num_spans]
     return span_start, span_end, span_width
 
-def split_into_batch(data, batch, filename):
-    endpoint = len(data ) // batch
-    start = 0
-    for i in range(batch):
-        if (i != batch-1):
-            np.save(filename+str(i)+'.npy', data[start:start+endpoint])
-        else:
-            np.save(filename+str(i)+'.npy', data[start:])
-        start += endpoint
-
-def read_from_batch(filename, batch):
-    data = []
-    for i in range(batch):
-        data.append(np.load(filename+str(i)+'.npy', mmap_mode='r'))
-    return np.concatenate(data)
+def split_train_test_val(features_1, features_11, features_2, features_3, out, sentences, config):
+    f1_train, f1_test,f11_train, f11_test, f2_train, f2_test, f3_train, f3_test, out_train, out_test, sent_train, sent_test= train_test_split(features_1, features_11, features_2, features_3, out, sentences, test_size=0.4,train_size=0.6)
+    f1_test, f1_val, f11_test, f11_val, f2_test, f2_val, f3_test, f3_val, out_test,out_val, sent_test, sent_val= train_test_split(f1_test, f11_test, f2_test,f3_test,out_test,sent_test, test_size = 0.5,train_size =0.5)
+    type = {
+        "train": [f1_train, f11_train, f2_train, f3_train, out_train, sent_train],
+        "test": [f1_test, f11_test, f2_test,f3_test, out_test, sent_test],
+        "val": [f1_val, f11_val, f2_val, f3_val, out_val, sent_val]
+    }
+    filename = [config['features_1'], config['features_1.1'], config['features_2'],config['features_3'], config['output'], 'sentences.npy']
+    for key, val in type.items():
+        for typ, name in zip(val, filename):
+            np.save(dir+str(key)+'_'+name, typ)
+            print(len(typ))
