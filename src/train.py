@@ -45,7 +45,7 @@ def main():
     features_3 = np.load(dir+config['features_3'], mmap_mode='r')
     input = [features_1, features_2, features_3]
     out = np.load(dir + config['output'], mmap_mode='r')
-    sentences = np.load(config['processed_sent'], allow_pickle=True)
+    # sentences = np.load(config['processed_sent'], allow_pickle=True)
     # # Training Parameters
     batch_size = config['batch_size']
     epochs = config['epochs']
