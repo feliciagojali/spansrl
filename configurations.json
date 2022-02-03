@@ -4,7 +4,7 @@
         "max_pred_span": 2,
         "max_arg_span": 26,
         "max_predicates": 20,
-        "max_arguments": 614,
+        "max_arguments": 800,
         "max_tokens": 49,
         "max_char": 52,
         "char_vocab": 95,
@@ -26,9 +26,9 @@
         "train_data": "/data/raw/batch1.csv",
         "word_emb_path":"data/pretrained/word2vec_news.model",
         "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
-        "batch_size": 6,
-        "epochs": 100,
-        "use_fasttext": false,
+        "batch_size": 8,
+        "epochs": 40,
+        "use_fasttext": true,
         "use_secondemb": true,
         "features_dir": "data/features/",
         "features_1": "word_emb_w2v.npy",
@@ -39,7 +39,7 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/w2v_100"
+        "model_path":"models/ft_40"
     },
     "fasttext": {
         "srl_labels": ["ARG0","ARG1","ARG2","AM-MOD","AM-ADV","REL","AM-TMP","AM-CAU","AM-LOC","AM-DIR", "AM-MNR","AM-DIS","AM-PRD","ARG3","ARG4","AM-LVB","AM-PRP","AM-COM","AM-GOL","AM-EXT","AM-REC","AM-NEG","AM-ADJ"],
