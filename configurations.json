@@ -30,6 +30,7 @@
         "epochs": 150,
         "use_fasttext": true,
         "use_secondemb": true,
+        "use_decay": false,
         "features_dir": "data/features/",
         "features_1": "word_emb_w2v.npy",
         "features_1.1": "word_emb_ft.npy",
@@ -39,7 +40,7 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/decay_150"
+        "model_path":"models/ft_150"
     },
     "fasttext": {
         "srl_labels": ["ARG0","ARG1","ARG2","AM-MOD","AM-ADV","REL","AM-TMP","AM-CAU","AM-LOC","AM-DIR", "AM-MNR","AM-DIS","AM-PRD","ARG3","ARG4","AM-LVB","AM-PRP","AM-COM","AM-GOL","AM-EXT","AM-REC","AM-NEG","AM-ADJ"],
@@ -81,6 +82,6 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/ft_80"
+        "model_path":"models/decay_100_ft"
     }
 }
