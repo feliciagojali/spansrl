@@ -26,7 +26,7 @@
         "train_data": "/data/raw/batch1.csv",
         "word_emb_path":"data/pretrained/word2vec_news.model",
         "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
-        "batch_size": 8,
+        "batch_size": 6,
         "epochs": 50,
         "use_fasttext": true,
         "use_secondemb": true,
@@ -81,6 +81,6 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/default_fasttext_True"
+        "model_path":"models/default_fasttext_False"
     }
 }
