@@ -27,7 +27,7 @@
         "word_emb_path":"data/pretrained/word2vec_news.model",
         "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
         "batch_size": 6,
-        "epochs": 100,
+        "epochs": 400,
         "use_fasttext": true,
         "use_secondemb": true,
         "use_decay": false,
@@ -40,7 +40,7 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/ft_100_1bihlstm"
+        "model_path":"models/ft_400"
     },
     "fasttext": {
         "srl_labels": ["ARG0","ARG1","ARG2","AM-MOD","AM-ADV","REL","AM-TMP","AM-CAU","AM-LOC","AM-DIR", "AM-MNR","AM-DIS","AM-PRD","ARG3","ARG4","AM-LVB","AM-PRP","AM-COM","AM-GOL","AM-EXT","AM-REC","AM-NEG","AM-ADJ"],
@@ -82,6 +82,6 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/ft_60_2bihlstm"
+        "model_path":"models/ft_150"
     }
 }
