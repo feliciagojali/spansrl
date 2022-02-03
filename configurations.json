@@ -14,7 +14,7 @@
         "emb_dropout": 0.5,
         "char_list": " 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,-_()[]{}!?:;#'\"/\\%$`&=*+@^~|",
         "dropout_value": 0.2,
-        "lstm_layers": 1,
+        "lstm_layers": 3,
         "lstm_units": 200,
         "lstm_dropout": 0.4,
         "num_heads": 1,
@@ -82,6 +82,6 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/ft_150"
+        "model_path":"models/ft_100_1bihlstm"
     }
 }
