@@ -60,12 +60,14 @@ def main():
     epochs = config['epochs']
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     initial_learning_rate = 0.001
-    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        initial_learning_rate,
-        decay_steps=100,
-        decay_rate=0.999,
-        staircase=True)
-    
+    if (config['use_decay']):
+        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate,
+            decay_steps=100,
+            decay_rate=0.999,
+            staircase=True)
+    else:
+        lr_schedule = initial_learning_rate
     # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
     model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
@@ -75,7 +77,7 @@ def main():
     # Predicting, unload model
     # data = SRLData(config, emb=False)
 
-    # model = load_model('models/default_fasttext_True')
+    # model = load_model(config['model_path'])
     # pred, idx_pred, idx_arg = model.predict(input)
     # res = data.convert_result_to_readable(pred, idx_arg, idx_pred)
     # real = data.convert_result_to_readable(out)
