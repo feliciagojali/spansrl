@@ -63,10 +63,10 @@ def main():
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
         initial_learning_rate,
         decay_steps=100,
-        decay_rate=0.001,
+        decay_rate=0.999,
         staircase=True)
     
-    # # Compiling, fitting and saving model
+    # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
     model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
     model.save('models/'+ config['model_path'])
