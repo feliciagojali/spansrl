@@ -252,3 +252,17 @@ def _print_f1(total_gold, total_predicted, total_matched, message=""):
     f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
     print ("{}: Precision: {}, Recall: {}, F1: {}".format(message, precision, recall, f1))
     return precision, recall, f1
+
+
+def split_into_batch(data, n):
+    batch = round(len(data) / n)
+
+    start = 0
+    for i in range(n):
+        if (i != n-1):
+            d = data[start: start+batch]
+        else:
+            d = data[start:]
+        start+=batch
+
+        np.save('../data/train_sum_sent'+str(i+1), d)

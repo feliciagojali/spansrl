@@ -35,29 +35,33 @@ FEATURES_PATH="./features"
 
 # cd ".."
 
-if [ ! -d $FEATURES_PATH ]; then
-  mkdir -p $FEATURES_PATH
-fi
-
-cd $FEATURES_PATH
-
-echo "Downloading features"
-gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
-unzip train_features.zip
-rm train_features.zip
-
-gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
-unzip val_features.zip
-rm val_features.zip
-# cd ".."
-
-# if [ ! -d $PROCESSED_PATH ]; then
-#   mkdir -p $PROCESSED_PATH
+# if [ ! -d $FEATURES_PATH ]; then
+#   mkdir -p $FEATURES_PATH
 # fi
 
-# cd $PROCESSED_PATH
+# cd $FEATURES_PATH
 
-# echo "Downloading processed data"
+# echo "Downloading features"
+# gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
+# unzip train_features.zip
+# rm train_features.zip
+
+# gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
+# unzip val_features.zip
+# rm val_features.zip
+# cd ".."
+
+if [ ! -d $PROCESSED_PATH ]; then
+  mkdir -p $PROCESSED_PATH
+fi
+
+cd $PROCESSED_PATH
+
+echo "Downloading processed data"
 # gdown --id 1MwGa6GQKQU5ETqKTB3DdCDfIetH7edOv
 # unzip batch1_processed.zip
 # rm batch1_processed.zip
+
+gdown --id 1LrzQL2tS3aC0d1SeRMWWOz3-bosCWir1
+unzip summary_sent.zip
+rm summary_sent.zip

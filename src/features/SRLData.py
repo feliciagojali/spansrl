@@ -39,10 +39,10 @@ class SRLData(object):
         self.use_fasttext = config['use_fasttext']
         self.emb1_dim = 300
         if (emb):
-            self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
-            self.word_emb_ft = []
-            self.word_vec = Word2Vec.load(config['word_emb_path']).wv
-            self.word_emb_w2v = []
+            # self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
+            # self.word_emb_ft = []
+            # self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+            # self.word_emb_w2v = []
             self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
             self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
             self.word_emb_2 = []
@@ -97,33 +97,32 @@ class SRLData(object):
 
     def extract_features(self, sentences, type, isSum=False):
         # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
-        self.pad_sentences(sentences, isArray=isSum)
+        # self.pad_sentences(sentences, isArray=isSum)
         if (isSum):
-            # berishin dulu
-            cleaned_sent = []
-                # Documents
-            self.word_emb = [self.extract_ft_emb(sent, padded) for sent, padded in zip(cleaned_sent, [])]   
-            self.word_emb_2 = [self.extract_sec_emb(sent) for sent in cleaned_sent]
-            self.char_input = [self.extract_char(sent) for sent in cleaned_sent]
+            # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
+            # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]   
+            # self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
+            # self.char_input = [self.extract_char(sent) for sent in padded_sent]
+            self.word_emb_2 = self.extract_bert_emb(sentences)    
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            self.word_emb_w2v = self.extract_word_emb(sentences, padded_sent)
-            self.word_emb_ft = self.extract_ft_emb(sentences, padded_sent)
+            self.word_emb_w2v = self.extract_word_emb(padded_sent)
+            self.word_emb_ft = self.extract_ft_emb(padded_sent)
             # self.word_emb_2 = self.extract_bert_emb(sentences)    
             # self.char_input = self.extract_char(padded_sent)
 
-
-        save_emb(self.word_emb_w2v, 'word_emb_w2v', type, isSum)
-        save_emb(self.word_emb_ft, 'word_emb_ft', type, isSum)
-
+    
+        # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
+        # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
+        np.save(type+ "_sum_bert.npy", self.word_emb_2)
         # save_emb(self.word_emb_2, 'bert', type, isSum)
-        # save_emb(self.char_input, 'char_input', type, isSum)
+        # save_emb(self.char_input, 'char_input_5', type, isSum)
         # print(self.word_emb.shape)
         # print(self.word_emb_2.shape)
         # print(self.char_input.shape)
     
-    def extract_word_emb(self, sentences, padded_sent):
-        word_emb = np.zeros(shape=(len(sentences), self.max_tokens, 300))
+    def extract_word_emb(self, padded_sent):
+        word_emb = np.zeros(shape=(len(padded_sent), self.max_tokens, 300), dtype='float32')
         for i, sent in enumerate(padded_sent):
             for j, word in enumerate(sent):
                 if (word == '<pad>' or not self.word_vec.has_index_for(word.lower())):
@@ -143,19 +142,19 @@ class SRLData(object):
         return bert_emb
         
 
-    def extract_ft_emb(self, sentences, padded_sent):  # sentences : Array (sent)
-        word_emb = np.ones(shape=(len(sentences), self.max_tokens, 300))
-        for i, sent in tqdm(enumerate(padded_sent)):
+    def extract_ft_emb(self, padded_sent):  # sentences : Array (sent)
+        word_emb = np.ones(shape=(len(padded_sent), self.max_tokens, 300), dtype='float32')
+        for i, sent in (enumerate(padded_sent)):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
-                    word_vec = np.zeros(300)
+                    word_vec = np.zeros(300,dtype='int8')
                 else:
                     word_vec = self.fast_text[word.lower()]
                 word_emb[i][j] = word_vec
         return word_emb
     
     def extract_char(self, sentences): # sentences: Array (sent)
-        char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char))
+        char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char), dtype='int8')
         for i, sent in tqdm(enumerate(sentences)):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
@@ -196,7 +195,9 @@ class SRLData(object):
         total_unlabeled_matched = 0
         comp_sents = 0
         label_confusions = Counter()
-
+        total_gold_label = Counter()
+        total_pred_label = Counter()
+        total_matched_label = Counter()
         for y_sent, pred_sent in zip(y, pred):
             gold_rels = 0
             pred_rels = 0
@@ -206,21 +207,30 @@ class SRLData(object):
                 gold_args = gold_pas['args']
                 total_gold += len(gold_args)
                 gold_rels += len(gold_args)
+                total_gold_label.update(['V'])
                 
                 arg_list_in_predict = check_pred_id(pred_id, pred_sent)
                 if (len(arg_list_in_predict) == 0):
                     continue
+                total_matched_label.update(['V'])
                 for arg0 in gold_args:
+                    label = arg0[-1]
+                    total_gold_label.update([label])
                     for arg1 in arg_list_in_predict[0]:
                         if (arg0[:-1] == arg1[:-1]): # Right span
                             total_unlabeled_matched += 1
                             label_confusions.update([(arg0[2], arg1[2]),])
                             if (arg0[2] == arg1[2]): # Right label
+                                total_matched_label.update([arg0[2]])
                                 total_matched += 1
                                 matched += 1
             for pred_pas in pred_sent:
+                total_pred_label.update(['V'])
                 pred_id = pred_pas['id_pred']
                 pred_args = pred_pas['args']
+                for arg1 in pred_args:
+                    label = arg1[-1]
+                    total_pred_label.update([label])
                 total_pred += len(pred_args)
                 pred_rels += len(pred_args)
             
@@ -229,7 +239,10 @@ class SRLData(object):
 
         precision, recall, f1 = _print_f1(total_gold, total_pred, total_matched, "SRL")
         ul_prec, ul_recall, ul_f1 = _print_f1(total_gold, total_pred, total_unlabeled_matched, "Unlabeled SRL")
-        
+        total = total_gold_label + total_pred_label
+        for key in total:
+            _print_f1(total_gold_label[key], total_pred_label[key], total_matched_label[key], str(key))
+
         return
 
 
