@@ -103,7 +103,7 @@ class SRLData(object):
             # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]   
             # self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
             # self.char_input = [self.extract_char(sent) for sent in padded_sent]
-            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in sentences]  
+            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]  
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
             self.word_emb_w2v = self.extract_word_emb(padded_sent)
