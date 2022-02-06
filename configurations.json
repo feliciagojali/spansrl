@@ -122,9 +122,9 @@
         "features_2":"sum_bert.npy",
         "features_3": "sum_char_input.npy",
         "output": "sum_output.npy",
-        "processed_sent": "data/processed/sum_sentences.npy",
+        "processed_sent": "data/sum/train_sum_padded_sent1.npy",
         "processed_arg_list": "data/processed/sum_arg_list.npy",
-        "processed_padded_sent": "data/processed/sum_padded_sent.npy",
+        "processed_padded_sent": "data/processed/train_sum_padded_sent5.npy",
         "model_path":"models/w2v_60"
     }
 }

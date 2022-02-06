@@ -34,7 +34,7 @@ def main():
     model = SRL(config)
 
     # Features loading
-    dir = config['features_dir'] +'train_'
+    dir = config['features_dir'] +'val_'
     if (not config['use_fasttext']):
         features_1 = np.load(dir +config['features_1'], mmap_mode='r')
     else :
@@ -56,35 +56,35 @@ def main():
     # out_val = np.load(dir + config['output'], mmap_mode='r')
 
     # Training Parameters
-    batch_size = config['batch_size']
-    epochs = config['epochs']
-    callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
-    initial_learning_rate = 0.001
-    if (config['use_decay']):
-        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate,
-            decay_steps=100,
-            decay_rate=0.999,
-            staircase=True)
-    else:
-        lr_schedule = initial_learning_rate
-    # Compiling, fitting and saving model
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
-    model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
-    model.save('models/'+ config['model_path'])
+    # batch_size = config['batch_size']
+    # epochs = config['epochs']
+    # callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
+    # initial_learning_rate = 0.001
+    # if (config['use_decay']):
+    #     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    #         initial_learning_rate,
+    #         decay_steps=100,
+    #         decay_rate=0.999,
+    #         staircase=True)
+    # else:
+    #     lr_schedule = initial_learning_rate
+    # # Compiling, fitting and saving model
+    # model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
+    # model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
+    # model.save('models/'+ config['model_path'])
 
 
     # Predicting, unload model
-    # data = SRLData(config, emb=False)
+    data = SRLData(config, emb=False)
 
-    # model = load_model(config['model_path'])
-    # pred, idx_pred, idx_arg = model.predict(input)
-    # res = data.convert_result_to_readable(pred, idx_arg, idx_pred)
-    # real = data.convert_result_to_readable(out)
-    # data.evaluate(real, res)
-    # with open('data/results/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
-    #     for item in res:
-    #         f.write("%s\n" %str(item))
+    model = load_model(config['model_path'])
+    pred, idx_pred, idx_arg = model.predict(input)
+    res = data.convert_result_to_readable(pred, idx_arg, idx_pred)
+    real = data.convert_result_to_readable(out)
+    data.evaluate(real, res)
+    with open('data/results/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
+        for item in res:
+            f.write("%s\n" %str(item))
 
      
 
