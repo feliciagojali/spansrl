@@ -33,7 +33,7 @@ def main():
             #     data.extract_features(i, 'val', True)
         
             # data.read_raw_data()
-            data.extract_features(datas, "test", id, True)
+            data.extract_features(datas, "test", id,k,  True)
             # data.convert_train_output()
             
    
