@@ -62,6 +62,6 @@ echo "Downloading processed data"
 # unzip batch1_processed.zip
 # rm batch1_processed.zip
 
-gdown --id 1LrzQL2tS3aC0d1SeRMWWOz3-bosCWir1
-unzip summary_sent.zip
-rm summary_sent.zip
+gdown --id 19D1dnT5vj-9Oh5n8LnWSJGyKGYX2mTCe
+unzip summary.zip
+rm summary.zip

@@ -20,18 +20,20 @@ def main():
     all_config = json.load(f)
 
     data = SRLData(all_config['summary'])
-    # path = 'data/processed/'
-    # file = path+'test_summary_corpus.csv'
+    path = 'data/processed/train/'
+    i = [1, 2, 3]
+    for id in i:
+        file = path+'train_sum_sent' + str(id)
 
-    # datas = pd.read_csv(file)
+        datas = np.load(file, allow_pickle=True)
 
-    # datas['article'] = datas['article'].progress_apply(lambda x : ast.literal_eval(x))
-    # for i in datas:
-    #     data.extract_features(i, 'val', True)
-   
-    # data.read_raw_data()
-    data.extract_features("train", True)
-    # data.convert_train_output()
+        # datas['article'] = datas['article'].progress_apply(lambda x : ast.literal_eval(x))
+        # for i in datas:
+        #     data.extract_features(i, 'val', True)
+    
+        # data.read_raw_data()
+        data.extract_features(datas, "test", id, True)
+        # data.convert_train_output()
         
    
 

@@ -95,8 +95,8 @@ class SRLData(object):
         save_emb(initialData, "train", "output")
         print(initialData.shape)
 
-    def extract_features(self, type, isSum=False):
-        sentences = np.load(self.config['processed_sent'], allow_pickle=True)
+    def extract_features(self, sentences, type, id, isSum=False):
+        # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
         # self.pad_sentences(sentences, isArray=isSum)
         if (isSum):
             # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
@@ -114,7 +114,7 @@ class SRLData(object):
     
         # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
         # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
-        np.save(type+ "_sum_bert_1.npy", self.word_emb_2)
+        np.save(type+ "_sum_bert_"+ str(id) +".npy", self.word_emb_2)
         # save_emb(self.word_emb_2, 'bert', type, isSum)
         # save_emb(self.char_input, 'char_input_5', type, isSum)
         # print(self.word_emb.shape)
