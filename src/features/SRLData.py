@@ -106,21 +106,22 @@ class SRLData(object):
             # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]   
             # self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
             # self.char_input = [self.extract_char(sent) for sent in padded_sent]
-            word_emb_2 = []
-            batch = 1000
-            for i, sent in tqdm(enumerate(sentences), position=0, leave=True):
-                if (i % batch == 0):
-                    if (i != batch and i!= 0):
-                        last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
-                    else: 
-                        last = []
-                    last += word_emb_2
-                    np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
-                    word_emb_2 = []
-                word_emb_2.append(self.extract_bert_emb(sent))
-            last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
-            last += word_emb_2
-            np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
+            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
+            # word_emb_2 = []
+            # batch = 1000
+            # for i, sent in tqdm(enumerate(sentences), position=0, leave=True):
+            #     if (i % batch == 0):
+            #         if (i != batch and i!= 0):
+            #             last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
+            #         else: 
+            #             last = []
+            #         last += word_emb_2
+            #         np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
+            #         word_emb_2 = []
+            #     word_emb_2.append(self.extract_bert_emb(sent))
+            # last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
+            # last += word_emb_2
+            # np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
 
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
@@ -132,7 +133,7 @@ class SRLData(object):
     
         # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
         # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
-        # np.save(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy", self.word_emb_2)
+        np.save(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy", self.word_emb_2)
         # save_emb(self.word_emb_2, 'bert', type, isSum)
         # save_emb(self.char_input, 'char_input_5', type, isSum)
         # print(self.word_emb.shape)
