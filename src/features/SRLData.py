@@ -118,6 +118,9 @@ class SRLData(object):
                     np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
                     word_emb_2 = []
                 word_emb_2.append(self.extract_bert_emb(sent))
+            last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
+            last += word_emb_2
+            np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
 
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
