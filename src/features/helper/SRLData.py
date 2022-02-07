@@ -4,11 +4,7 @@ import os
 import sys
 from collections import Counter
 
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-from .helper import save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
-from ..utils.utils import create_span
+from .helper import create_span, save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm

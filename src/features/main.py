@@ -5,8 +5,7 @@ raw_filename = 'raw.csv'
 # import tensorflow as tf
 import json
 import numpy as np
-from SRLData import SRLData
-from helper import split_into_batch
+from helper import SRLData, split_into_batch
 import ast
 import pandas as pd
 from tqdm import tqdm

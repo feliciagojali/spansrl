@@ -1,2 +1,2 @@
-from models.layers.biaffine import BiAffine
-from models.layers.highway import Highway
+from .biaffine import BiAffine
+from .highway import Highway

@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from keras import backend as K
 import numpy as np
-from features.SRLData import SRLData
+from features import SRLData
 
 def print_default():
     print('Configurations name not found.. Using the default config..')
