@@ -1,2 +1,2 @@
-from features.helper import *
-from features.SRLData import SRLData
+from helper import *
+from SRLData import SRLData
