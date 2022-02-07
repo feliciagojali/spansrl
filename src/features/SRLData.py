@@ -16,6 +16,7 @@ from transformers import AutoTokenizer, AutoModel
 from gensim.models import fasttext, Word2Vec
 import time
 import sys
+import torch
 
 class SRLData(object):
     def __init__(self, config, emb=True):
@@ -43,7 +44,9 @@ class SRLData(object):
             # self.word_emb_ft = []
             # self.word_vec = Word2Vec.load(config['word_emb_path']).wv
             # self.word_emb_w2v = []
-            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
+
+            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(device)
             self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
             self.word_emb_2 = []
             self.emb2_dim = 768
@@ -137,7 +140,7 @@ class SRLData(object):
         else:
             return self.extract_bert_emb(sentences)
     def extract_bert_emb(self, sentences): # sentences : Array (sent)
-        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens)
+        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.device)
         bert_emb = np.array(bert_emb)
         return bert_emb
         

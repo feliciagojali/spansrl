@@ -4,8 +4,8 @@ import numpy as np
 import torch
 import tensorflow as tf
 ## BERT functions
-def extract_bert(model, tokenizer, sentences, max_tokens):
-    bert_features = [bert_sent(sent, model, tokenizer, max_tokens) for  sent in sentences]
+def extract_bert(model, tokenizer, sentences, max_tokens, device):
+    bert_features = [bert_sent(sent, model, tokenizer, max_tokens, device) for  sent in sentences]
     return bert_features
 
 def save_emb(emb, type, trainType, isSum=False):
@@ -18,7 +18,7 @@ def save_emb(emb, type, trainType, isSum=False):
 def save_npy(filename, arr):
     np.save(filename, arr)
 
-def bert_sent(sentence, model, tokenizer, max_tokens):
+def bert_sent(sentence, model, tokenizer, max_tokens, device):
     # Truncate
     if (len(sentence) > max_tokens):
         sentence = sentence[:max_tokens]
@@ -35,7 +35,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens):
 
     input_ids, offset = remove_sep(inputs, len(tokens))
   
-    x = torch.LongTensor(input_ids).view(1,-1)
+    x = torch.LongTensor(input_ids).view(1,-1).to(device)
     out = model(x)[0].cpu().detach().numpy()
     
     # Handle subword (Average)
@@ -254,7 +254,7 @@ def _print_f1(total_gold, total_predicted, total_matched, message=""):
     return precision, recall, f1
 
 
-def split_into_batch(data, n):
+def split_into_batch(data, id, n):
     batch = round(len(data) / n)
 
     start = 0
@@ -265,4 +265,4 @@ def split_into_batch(data, n):
             d = data[start:]
         start+=batch
 
-        np.save('../data/train_sum_sent'+str(i+1), d)
+        np.save('../data/train_sum_sent_'+str(id)+'.'+str(i+1), d)
