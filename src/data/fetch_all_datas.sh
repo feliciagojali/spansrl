@@ -35,21 +35,22 @@ FEATURES_PATH="./features"
 
 # cd ".."
 
-# if [ ! -d $FEATURES_PATH ]; then
-#   mkdir -p $FEATURES_PATH
-# fi
+if [ ! -d $FEATURES_PATH ]; then
+  mkdir -p $FEATURES_PATH
+fi
 
-# cd $FEATURES_PATH
+cd $FEATURES_PATH
 
-# echo "Downloading features"
-# gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
-# unzip train_features.zip
-# rm train_features.zip
+echo "Downloading features"
+gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
+unzip train_features.zip
+rm train_features.zip
 
 # gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
 # unzip val_features.zip
 # rm val_features.zip
-# cd ".."
+
+cd ".."
 
 if [ ! -d $PROCESSED_PATH ]; then
   mkdir -p $PROCESSED_PATH
