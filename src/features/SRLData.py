@@ -110,8 +110,8 @@ class SRLData(object):
             batch = 1000
             for i, sent in tqdm(enumerate(sentences), position=0, leave=True):
                 if (i % batch == 0):
-                    if (i != batch):
-                        last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy")
+                    if (i != batch and i!= 0):
+                        last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
                     else: 
                         last = []
                     last += word_emb_2
