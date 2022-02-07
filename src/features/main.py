@@ -20,21 +20,22 @@ def main():
     all_config = json.load(f)
 
     data = SRLData(all_config['summary'])
-    path = 'data/processed/train/'
-    i = [1, 2, 3]
+    path = 'data/processed/train/batched/'
+    i = [1, 2, 3, 4, 5, 6]
     for id in i:
-        file = path+'train_sum_sent' + str(id) +'.npy'
+        for k in range(2):
+            file = path+'train_sum_sent_' + str(id)+'.'+str(k+1) +'.npy'
 
-        datas = np.load(file, allow_pickle=True)
+            datas = np.load(file, allow_pickle=True)
 
-        # datas['article'] = datas['article'].progress_apply(lambda x : ast.literal_eval(x))
-        # for i in datas:
-        #     data.extract_features(i, 'val', True)
-    
-        # data.read_raw_data()
-        data.extract_features(datas, "test", id, True)
-        # data.convert_train_output()
+            # datas['article'] = datas['article'].progress_apply(lambda x : ast.literal_eval(x))
+            # for i in datas:
+            #     data.extract_features(i, 'val', True)
         
+            # data.read_raw_data()
+            data.extract_features(datas, "test", id, True)
+            # data.convert_train_output()
+            
    
 
 
