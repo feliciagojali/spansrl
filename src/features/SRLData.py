@@ -117,8 +117,7 @@ class SRLData(object):
                     last += word_emb_2
                     np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
                     word_emb_2 = []
-                else:
-                    word_emb_2.append(self.extract_bert_emb(sent))
+                word_emb_2.append(self.extract_bert_emb(sent))
 
             self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]  
         else:
