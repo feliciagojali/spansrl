@@ -23,7 +23,7 @@ def main():
     path = 'data/processed/train/'
     i = [1, 2, 3]
     for id in i:
-        file = path+'train_sum_sent' + str(id)
+        file = path+'train_sum_sent' + str(id) +'.npy'
 
         datas = np.load(file, allow_pickle=True)
 
