@@ -110,7 +110,7 @@ class SRLData(object):
             batch = 1000
             for i, sent in tqdm(enumerate(sentences), position=0, leave=True):
                 if (i % batch == 0):
-                    if (i != batch):
+                    if (i != batch or i != 0):
                         last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy")
                     else: 
                         last = []
