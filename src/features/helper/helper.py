@@ -254,7 +254,7 @@ def _print_f1(total_gold, total_predicted, total_matched, message=""):
     return precision, recall, f1
 
 
-def split_into_batch(data, n):
+def split_into_batch(data, n, type):
     batch = round(len(data) / n)
 
     start = 0
@@ -265,7 +265,7 @@ def split_into_batch(data, n):
             d = data[start:]
         start+=batch
 
-        np.save('../data/train_sum_sent_'+str(i+1), d)
+        np.save('../data/'+type+'_sum_sent_'+str(i+1), d)
 
 def create_span(length, max_span_length):
     span_start = []

@@ -36,15 +36,15 @@ class SRLData(object):
         self.use_fasttext = config['use_fasttext']
         self.emb1_dim = 300
         if (emb):
-            # self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
-            # self.word_emb_ft = []
-            # self.word_vec = Word2Vec.load(config['word_emb_path']).wv
-            # self.word_emb_w2v = []
+            self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
+            self.word_emb_ft = []
+            self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+            self.word_emb_w2v = []
 
             self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
-            self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
-            self.word_emb_2 = []
+            # self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
+            # self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
+            # self.word_emb_2 = []
             self.emb2_dim = 768
         # Output
         self.output = []
@@ -94,42 +94,32 @@ class SRLData(object):
         save_emb(initialData, "train", "output")
         print(initialData.shape)
 
-    def extract_features(self, sentences, type, id, k, isSum=False):
+    def extract_features(self, sentences, type, id, isSum=False):
         # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
-        # self.pad_sentences(sentences, isArray=isSum)
+        padded_sent = self.pad_sentences(sentences, isArray=isSum)
         if (isSum):
-            # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]   
-            # self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
-            # self.char_input = [self.extract_char(sent) for sent in padded_sent]
-            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
-            # word_emb_2 = []
-            # batch = 1000
-            # for i, sent in tqdm(enumerate(sentences), position=0, leave=True):
-            #     if (i % batch == 0):
-            #         if (i != batch and i!= 0):
-            #             last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
-            #         else: 
-            #             last = []
-            #         last += word_emb_2
-            #         np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
-            #         word_emb_2 = []
-            #     word_emb_2.append(self.extract_bert_emb(sent))
-            # last = np.load(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", allow_pickle=True)
-            # last += word_emb_2
-            # np.save(type+ "_sum_bert_"+ str(id) + "." + str(k+1)+ ".npy", last)
+        #     # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
+            self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]  
+            np.save('../data/'+type+'_sum_ft_'+str(id)+'.npy', self.word_emb_ft) 
+            self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
+            np.save('../data/'+type+'_sum_w2v_'+str(id)+'.npy', self.word_emb_w2v)
+            self.char_input = [self.extract_char(sent) for sent in padded_sent]
+            np.save('../data/'+type+'_sum_char_'+str(id)+'.npy', self.char_input)
+        #     # self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
+        #     # word_emb_2 = []
+           
 
-        else:
-            padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            self.word_emb_w2v = self.extract_word_emb(padded_sent)
-            self.word_emb_ft = self.extract_ft_emb(padded_sent)
-            # self.word_emb_2 = self.extract_bert_emb(sentences)    
-            # self.char_input = self.extract_char(padded_sent)
+        # else:
+        #     padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
+        #     self.word_emb_w2v = self.extract_word_emb(padded_sent)
+        #     self.word_emb_ft = self.extract_ft_emb(padded_sent)
+        #     # self.word_emb_2 = self.extract_bert_emb(sentences)    
+        #     # self.char_input = self.extract_char(padded_sent)
 
     
-        # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
-        # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
-        np.save(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy", self.word_emb_2)
+        # # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
+        # # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
+        # np.save(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy", self.word_emb_2)
         # save_emb(self.word_emb_2, 'bert', type, isSum)
         # save_emb(self.char_input, 'char_input_5', type, isSum)
         # print(self.word_emb.shape)
@@ -186,7 +176,9 @@ class SRLData(object):
             padded = [pad_input(sent, self.max_tokens) for sent in sentences]
         else:
             padded = pad_input(sentences, self.max_tokens)
-        save_npy(self.config['processed_padded_sent'], padded)
+        return padded
+        # np.save('../data/'+types+'_sum_padded_sent_' +str(id)+'.npy', padded)
+        # save_npy(self.config['processed_padded_sent'], padded)
 
     def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
         labels_list = list(self.labels_mapping.keys())
