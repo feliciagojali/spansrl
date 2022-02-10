@@ -59,7 +59,7 @@ def main():
     batch_size = config['batch_size']
     epochs = config['epochs']
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
-    initial_learning_rate = 0.0008
+    initial_learning_rate = 0.0007
     if (config['use_decay']):
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
             initial_learning_rate,
