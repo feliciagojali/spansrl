@@ -1,8 +1,8 @@
 from tensorflow.keras.models import Model
 
 from tensorflow.keras.layers import Concatenate, Dropout, Dense, Embedding, Softmax, Input
-from blocks import Pruning, Attention, BiHLSTM, SpanEndpointsLength, Scoring, ComputeScoring, CharacterEmbedding, PredicateArgumentEmb
-from layers import BiAffine
+from .blocks import Pruning, Attention, BiHLSTM, SpanEndpointsLength, Scoring, ComputeScoring, CharacterEmbedding, PredicateArgumentEmb
+from .layers import BiAffine
 from utils.utils import create_span
 
 import tensorflow as tf
