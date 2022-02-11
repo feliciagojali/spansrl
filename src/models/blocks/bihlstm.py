@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import Layer, LSTM, Concatenate, Dropout
 
-from models.layers import Highway
+from ..layers import Highway
 
 class BiHLSTM(Layer):
     def __init__(self, config, name, **kwargs):
