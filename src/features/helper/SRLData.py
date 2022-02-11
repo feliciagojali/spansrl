@@ -42,9 +42,9 @@ class SRLData(object):
             self.word_emb_w2v = []
 
             self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-            # self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
-            # self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
-            # self.word_emb_2 = []
+            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
+            self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
+            self.word_emb_2 = []
             self.emb2_dim = 768
         # Output
         self.output = []
@@ -94,27 +94,31 @@ class SRLData(object):
         save_emb(initialData, "train", "output")
         print(initialData.shape)
 
-    def extract_features(self, sentences, type, id, isSum=False):
+    def extract_features(self, sentences, type=False, id=False, isSum=False):
         # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
         padded_sent = self.pad_sentences(sentences, isArray=isSum)
         if (isSum):
-        #     # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]  
-            np.save('../data/'+type+'_sum_ft_'+str(id)+'.npy', self.word_emb_ft) 
-            self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
-            np.save('../data/'+type+'_sum_w2v_'+str(id)+'.npy', self.word_emb_w2v)
-            self.char_input = [self.extract_char(sent) for sent in padded_sent]
-            np.save('../data/'+type+'_sum_char_'+str(id)+'.npy', self.char_input)
-        #     # self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
+            # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
+            # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]  
+            # np.save('../data/'+type+'_sum_ft_'+str(id)+'.npy', self.word_emb_ft) 
+            print("-- extracting w2v features --")
+            self.word_emb_w2v = [self.extract_word_emb(padded) for padded in tqdm((padded_sent), position=0, leave=True)]
+            # np.save('../data/'+type+'_sum_w2v_'+str(id)+'.npy', self.word_emb_w2v)
+            print("-- extracting char features --")
+            self.char_input = [self.extract_char(sent) for sent in tqdm(padded_sent, position=0, leave=True)]
+            # np.save('../data/'+type+'_sum_char_'+str(id)+'.npy', self.char_input)
+            print("-- extracting bert features --")
+
+            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
         #     # word_emb_2 = []
            
 
-        # else:
-        #     padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-        #     self.word_emb_w2v = self.extract_word_emb(padded_sent)
-        #     self.word_emb_ft = self.extract_ft_emb(padded_sent)
-        #     # self.word_emb_2 = self.extract_bert_emb(sentences)    
-        #     # self.char_input = self.extract_char(padded_sent)
+        else:
+            padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
+            self.word_emb_w2v = self.extract_word_emb(padded_sent)
+            self.word_emb_ft = self.extract_ft_emb(padded_sent)
+            # self.word_emb_2 = self.extract_bert_emb(sentences)    
+            # self.char_input = self.extract_char(padded_sent)
 
     
         # # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
@@ -160,7 +164,7 @@ class SRLData(object):
     
     def extract_char(self, sentences): # sentences: Array (sent)
         char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char), dtype='int8')
-        for i, sent in tqdm(enumerate(sentences)):
+        for i, sent in enumerate(sentences):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
                     continue
