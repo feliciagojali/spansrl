@@ -70,7 +70,7 @@ def main():
         lr_schedule = initial_learning_rate
     # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
-    model.fit(input, out, batch_size=batch_size, validation_data=[input_val, out_val], epochs=epochs, callbacks=[callback])
+    model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback])
     model.save('models/'+ config['model_path'])
 
 
