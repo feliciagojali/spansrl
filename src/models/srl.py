@@ -52,6 +52,7 @@ class SRL(Model):
     
 
         # Pruning
+        self.use_pruning = config['use_pruning']
         self.arg_span_idx_mask = []
         self.pred_span_idx_mask = []
         self.pred_prune = Pruning(config['max_predicates'], name='pred_pruning')
@@ -120,7 +121,7 @@ class SRL(Model):
         arg_unary_score = self.arg_unary(arg_rep)
 
         # Pruning in inference
-        if (not training) :
+        if (not training and self.use_pruning) :
             filtered_arg_idx = self.arg_prune(arg_unary_score)
             filtered_pred_idx  = self.pred_prune(pred_unary_score)
             self.arg_span_idx_mask = filtered_arg_idx
@@ -148,5 +149,8 @@ class SRL(Model):
         if (training):
             return out
         else:
-            return out, filtered_pred_idx, filtered_arg_idx
+            if (self.use_pruning):
+                return out, filtered_pred_idx, filtered_arg_idx
+            else:
+                return out
 
