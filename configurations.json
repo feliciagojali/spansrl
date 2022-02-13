@@ -40,7 +40,7 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/wv_400_5e-4"
+        "model_path":"models/wv_240_1e-5"
     },
     "fasttext": {
         "srl_labels": ["ARG0","ARG1","ARG2","AM-MOD","AM-ADV","REL","AM-TMP","AM-CAU","AM-LOC","AM-DIR", "AM-MNR","AM-DIS","AM-PRD","ARG3","ARG4","AM-LVB","AM-PRP","AM-COM","AM-GOL","AM-EXT","AM-REC","AM-NEG","AM-ADJ"],
@@ -122,9 +122,9 @@
         "features_2":"sum_bert.npy",
         "features_3": "sum_char_input.npy",
         "output": "sum_output.npy",
-        "processed_sent": "data/processed/sum_sentences.npy",
+        "processed_sent": "data/processed/train_sum_sent1.npy",
         "processed_arg_list": "data/processed/sum_arg_list.npy",
-        "processed_padded_sent": "data/processed/sum_padded_sent.npy",
+        "processed_padded_sent": "data/processed/train_sum_padded_sent5.npy",
         "model_path":"models/w2v_60"
     }
 }
