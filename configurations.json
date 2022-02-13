@@ -27,7 +27,7 @@
         "word_emb_path":"data/pretrained/word2vec_news.model",
         "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
         "batch_size": 6,
-        "epochs": 400,
+        "epochs": 800,
         "use_fasttext": false,
         "use_secondemb": true,
         "use_decay": true,
