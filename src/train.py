@@ -29,20 +29,17 @@ def main():
         print_default()
         config = all_config[default]
 
-    eval_validation(config)
-
-    
 
     # Features loading
-    dir = config['features_dir'] +'val_'
+    dir = config['features_dir'] +'train_'
     if (not config['use_fasttext']):
         features_1 = np.load(dir +config['features_1'], mmap_mode='r')
     else :
         features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
     features_2 = np.load(dir+config['features_2'], mmap_mode='r')
     features_3 = np.load(dir+config['features_3'], mmap_mode='r')
-    input_val = [features_1, features_2, features_3]
-    out_val = np.load(dir + config['output'], mmap_mode='r')
+    input = [features_1, features_2, features_3]
+    out = np.load(dir + config['output'], mmap_mode='r')
 
     # Training Parameters
     batch_size = config['batch_size']
@@ -60,9 +57,9 @@ def main():
     # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
     model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback])
-    model.save('models/'+ config['model_path'])
+    model.save(config['model_path'])
 
-
+    eval_validation(config)
     
 
      
