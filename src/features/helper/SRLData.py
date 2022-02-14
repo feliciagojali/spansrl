@@ -4,11 +4,7 @@ import os
 import sys
 from collections import Counter
 
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-from features.helper import save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
-from utils.utils import create_span
+from .helper import create_span, save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -16,6 +12,7 @@ from transformers import AutoTokenizer, AutoModel
 from gensim.models import fasttext, Word2Vec
 import time
 import sys
+import torch
 
 class SRLData(object):
     def __init__(self, config, emb=True):
@@ -39,11 +36,13 @@ class SRLData(object):
         self.use_fasttext = config['use_fasttext']
         self.emb1_dim = 300
         if (emb):
-            # self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
-            # self.word_emb_ft = []
-            # self.word_vec = Word2Vec.load(config['word_emb_path']).wv
-            # self.word_emb_w2v = []
-            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
+            self.fast_text = fasttext.load_facebook_vectors(config['fasttext_emb_path'])
+            self.word_emb_ft = []
+            self.word_vec = Word2Vec.load(config['word_emb_path']).wv
+            self.word_emb_w2v = []
+
+            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
             self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
             self.word_emb_2 = []
             self.emb2_dim = 768
@@ -95,15 +94,25 @@ class SRLData(object):
         save_emb(initialData, "train", "output")
         print(initialData.shape)
 
-    def extract_features(self, sentences, type, isSum=False):
+    def extract_features(self, sentences, isSum=False):
         # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
-        # self.pad_sentences(sentences, isArray=isSum)
+        padded_sent = self.pad_sentences(sentences, isArray=isSum)
         if (isSum):
             # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]   
-            # self.word_emb_w2v = [self.extract_word_emb(padded) for padded in (padded_sent)]
-            # self.char_input = [self.extract_char(sent) for sent in padded_sent]
-            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]  
+            # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]  
+            # np.save('../data/'+type+'_sum_ft_'+str(id)+'.npy', self.word_emb_ft) 
+            print("-- extracting w2v features --")
+            self.word_emb_w2v = [self.extract_word_emb(padded) for padded in tqdm((padded_sent), position=0, leave=True)]
+            # np.save('../data/'+type+'_sum_w2v_'+str(id)+'.npy', self.word_emb_w2v)
+            print("-- extracting char features --")
+            self.char_input = [self.extract_char(sent) for sent in tqdm(padded_sent, position=0, leave=True)]
+            # np.save('../data/'+type+'_sum_char_'+str(id)+'.npy', self.char_input)
+            print("-- extracting bert features --")
+
+            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
+        #     # word_emb_2 = []
+           
+
         else:
             padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
             self.word_emb_w2v = self.extract_word_emb(padded_sent)
@@ -112,9 +121,9 @@ class SRLData(object):
             # self.char_input = self.extract_char(padded_sent)
 
     
-        # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
-        # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
-        np.save(type+ "_sum_bert.npy", self.word_emb_2)
+        # # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
+        # # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
+        # np.save(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy", self.word_emb_2)
         # save_emb(self.word_emb_2, 'bert', type, isSum)
         # save_emb(self.char_input, 'char_input_5', type, isSum)
         # print(self.word_emb.shape)
@@ -137,7 +146,7 @@ class SRLData(object):
         else:
             return self.extract_bert_emb(sentences)
     def extract_bert_emb(self, sentences): # sentences : Array (sent)
-        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens)
+        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.device)
         bert_emb = np.array(bert_emb)
         return bert_emb
         
@@ -155,7 +164,7 @@ class SRLData(object):
     
     def extract_char(self, sentences): # sentences: Array (sent)
         char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char), dtype='int8')
-        for i, sent in tqdm(enumerate(sentences)):
+        for i, sent in enumerate(sentences):
             for j, word in enumerate(sent):
                 if (word == '<pad>'):
                     continue
@@ -171,7 +180,9 @@ class SRLData(object):
             padded = [pad_input(sent, self.max_tokens) for sent in sentences]
         else:
             padded = pad_input(sentences, self.max_tokens)
-        save_npy(self.config['processed_padded_sent'], padded)
+        return padded
+        # np.save('../data/'+types+'_sum_padded_sent_' +str(id)+'.npy', padded)
+        # save_npy(self.config['processed_padded_sent'], padded)
 
     def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
         labels_list = list(self.labels_mapping.keys())

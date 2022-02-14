@@ -21,19 +21,19 @@ FEATURES_PATH="./features"
 
 # cd ".."
 
-# if [ ! -d $PRETRAINED_PATH ]; then
-#   mkdir -p $PRETRAINED_PATH
-# fi
+if [ ! -d $PRETRAINED_PATH ]; then
+  mkdir -p $PRETRAINED_PATH
+fi
 
-# cd $PRETRAINED_PATH
+cd $PRETRAINED_PATH
 
-# echo "Downloading pretrained models and data"
-# gdown --id 1vL8vyfJbaj3i91peTu738jq25N-yhsU3
-# gdown --id 1MQjcRLBCJsdk3AyCBWfAkltzRTHhI9ED
-# unzip word2vec_news.model.wv.vectors.zip
-# rm word2vec_news.model.wv.vectors.zip
+echo "Downloading pretrained models and data"
+gdown --id 1vL8vyfJbaj3i91peTu738jq25N-yhsU3
+gdown --id 1MQjcRLBCJsdk3AyCBWfAkltzRTHhI9ED
+unzip word2vec_news.model.wv.vectors.zip
+rm word2vec_news.model.wv.vectors.zip
 
-# cd ".."
+cd ".."
 
 if [ ! -d $FEATURES_PATH ]; then
   mkdir -p $FEATURES_PATH
@@ -66,6 +66,6 @@ echo "Downloading processed data"
 # unzip batch1_processed.zip
 # rm batch1_processed.zip
 
-gdown --id 1LrzQL2tS3aC0d1SeRMWWOz3-bosCWir1
-unzip summary_sent.zip
-rm summary_sent.zip
+gdown --id 19D1dnT5vj-9Oh5n8LnWSJGyKGYX2mTCe
+unzip summary.zip
+rm summary.zip

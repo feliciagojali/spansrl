@@ -4,8 +4,8 @@ import numpy as np
 import torch
 import tensorflow as tf
 ## BERT functions
-def extract_bert(model, tokenizer, sentences, max_tokens):
-    bert_features = [bert_sent(sent, model, tokenizer, max_tokens) for  sent in sentences]
+def extract_bert(model, tokenizer, sentences, max_tokens, device):
+    bert_features = [bert_sent(sent, model, tokenizer, max_tokens, device) for  sent in sentences]
     return bert_features
 
 def save_emb(emb, type, trainType, isSum=False):
@@ -18,7 +18,7 @@ def save_emb(emb, type, trainType, isSum=False):
 def save_npy(filename, arr):
     np.save(filename, arr)
 
-def bert_sent(sentence, model, tokenizer, max_tokens):
+def bert_sent(sentence, model, tokenizer, max_tokens, device):
     # Truncate
     if (len(sentence) > max_tokens):
         sentence = sentence[:max_tokens]
@@ -35,7 +35,7 @@ def bert_sent(sentence, model, tokenizer, max_tokens):
 
     input_ids, offset = remove_sep(inputs, len(tokens))
   
-    x = torch.LongTensor(input_ids).view(1,-1)
+    x = torch.LongTensor(input_ids).view(1,-1).to(device)
     out = model(x)[0].cpu().detach().numpy()
     
     # Handle subword (Average)
@@ -254,7 +254,7 @@ def _print_f1(total_gold, total_predicted, total_matched, message=""):
     return precision, recall, f1
 
 
-def split_into_batch(data, n):
+def split_into_batch(data, n, type):
     batch = round(len(data) / n)
 
     start = 0
@@ -265,4 +265,22 @@ def split_into_batch(data, n):
             d = data[start:]
         start+=batch
 
-        np.save('../data/train_sum_sent'+str(i+1), d)
+        np.save('../data/'+type+'_sum_sent_'+str(i+1), d)
+
+def create_span(length, max_span_length):
+    span_start = []
+    span_end = []
+    span_width = []
+    for i in range(length):
+        for j in range(max_span_length):
+            start_idx = i
+            end_idx = i+j
+
+            if (end_idx >= length):
+                break
+            span_start.append(start_idx)
+            span_end.append(end_idx)
+            span_width.append(end_idx - start_idx + 1)
+
+    # Shape span_start, span_end: [num_spans]
+    return span_start, span_end, span_width

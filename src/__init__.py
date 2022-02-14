@@ -1,2 +1,2 @@
-from src.models import *
-from src.features import *
+from .models import *
+from .features import *

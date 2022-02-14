@@ -1,5 +1,7 @@
-from sklearn.model_selection import train_test_split
 import numpy as np
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import load_model
+from features import SRLData
 
 def create_span(length, max_span_length):
     span_start = []
@@ -32,3 +34,31 @@ def split_train_test_val(features_1, features_11, features_2, features_3, out, s
         for typ, name in zip(val, filename):
             np.save(dir+str(key)+'_'+name, typ)
             print(len(typ))
+
+def eval_validation(config):
+    # Features loading
+    dir = config['features_dir'] +'val_'
+    if (not config['use_fasttext']):
+        features_1 = np.load(dir +config['features_1'], mmap_mode='r')
+    else :
+        features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
+    features_2 = np.load(dir+config['features_2'], mmap_mode='r')
+    features_3 = np.load(dir+config['features_3'], mmap_mode='r')
+    input = [features_1, features_2, features_3]
+    out = np.load(dir + config['output'], mmap_mode='r')
+
+    # Predicting, unload model
+    data = SRLData(config, emb=False)
+
+    model = load_model(config['model_path'])
+    if (config['use_pruning']):
+        pred, idx_pred, idx_arg = model.predict(input)
+        res =  data.convert_result_to_readable(pred, idx_arg, idx_pred)
+    else:
+        pred = model.predict(input)
+        res = data.convert_result_to_readable(pred)
+    real = data.convert_result_to_readable(out)
+    data.evaluate(real, res)
+    with open('data/results/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
+        for item in res:
+            f.write("%s\n" %str(item))

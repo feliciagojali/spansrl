@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dense, Dropout, Add, Concatenate
 
-from models.blocks.functions import NullScores
+from .functions import NullScores
 
 class Scoring(Layer):
     def __init__(self, config, output_size, name, **kwargs):
