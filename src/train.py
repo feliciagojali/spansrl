@@ -31,8 +31,8 @@ def main():
 
 
     # Features loading
-    input, out = load_data('train')
-    input_val, out_val = load_data('val')
+    input, out = load_data(config, 'train')
+    input_val, out_val = load_data(config, 'val')
 
     # Training Parameters
     batch_size = config['batch_size']

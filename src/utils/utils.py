@@ -36,7 +36,7 @@ def split_train_test_val(features_1, features_11, features_2, features_3, out, s
             print(len(typ))
 
 def eval_validation(config):
-    input, out = load_data('val')
+    input, out = load_data(config, 'val')
 
     # Predicting, unload model
     data = SRLData(config, emb=False)
@@ -54,7 +54,7 @@ def eval_validation(config):
         for item in res:
             f.write("%s\n" %str(item))
 
-def load_data(types):
+def load_data(config, types):
      # Features loading
     dir = config['features_dir'] + types + '_'
     if (not config['use_fasttext']):
