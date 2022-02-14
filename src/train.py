@@ -78,8 +78,12 @@ def main():
     data = SRLData(config, emb=False)
 
     model = load_model(config['model_path'])
-    pred, idx_pred, idx_arg = model.predict(input)
-    res = data.convert_result_to_readable(pred, idx_arg, idx_pred)
+    if (config['use_pruning']):
+        pred, idx_pred, idx_arg = model.predict(input)
+        res =  data.convert_result_to_readable(pred, idx_arg, idx_pred)
+    else:
+        pred = model.predict(input)
+        res = data.convert_result_to_readable(pred)
     real = data.convert_result_to_readable(out)
     data.evaluate(real, res)
     with open('data/results/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
