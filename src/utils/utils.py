@@ -43,10 +43,10 @@ def eval_validation(config):
 
     model = load_model(config['model_path'])
     if (config['use_pruning']):
-        pred, idx_pred, idx_arg = model.predict(input)
+        pred, idx_pred, idx_arg = model.predict(input, batch_size=config['batch_size'])
         res =  data.convert_result_to_readable(pred, idx_arg, idx_pred)
     else:
-        pred = model.predict(input)
+        pred = model.predict(input, batch_size=config['batch_size'])
         res = data.convert_result_to_readable(pred)
     real = data.convert_result_to_readable(out)
     data.evaluate(real, res)
