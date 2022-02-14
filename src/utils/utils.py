@@ -36,16 +36,7 @@ def split_train_test_val(features_1, features_11, features_2, features_3, out, s
             print(len(typ))
 
 def eval_validation(config):
-    # Features loading
-    dir = config['features_dir'] +'val_'
-    if (not config['use_fasttext']):
-        features_1 = np.load(dir +config['features_1'], mmap_mode='r')
-    else :
-        features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
-    features_2 = np.load(dir+config['features_2'], mmap_mode='r')
-    features_3 = np.load(dir+config['features_3'], mmap_mode='r')
-    input = [features_1, features_2, features_3]
-    out = np.load(dir + config['output'], mmap_mode='r')
+    input, out = load_data('val')
 
     # Predicting, unload model
     data = SRLData(config, emb=False)
@@ -62,3 +53,17 @@ def eval_validation(config):
     with open('data/results/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
         for item in res:
             f.write("%s\n" %str(item))
+
+def load_data(types):
+     # Features loading
+    dir = config['features_dir'] + types + '_'
+    if (not config['use_fasttext']):
+        features_1 = np.load(dir +config['features_1'], mmap_mode='r')
+    else :
+        features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
+    features_2 = np.load(dir+config['features_2'], mmap_mode='r')
+    features_3 = np.load(dir+config['features_3'], mmap_mode='r')
+    input = [features_1, features_2, features_3]
+    out = np.load(dir + config['output'], mmap_mode='r')
+
+    return input, out

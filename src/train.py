@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from models import SRL
 from keras import backend as K
-from utils import eval_validation
+from utils import eval_validation, load_data
 
 def print_default():
     print('Configurations name not found.. Using the default config..')
@@ -31,21 +31,14 @@ def main():
 
 
     # Features loading
-    dir = config['features_dir'] +'train_'
-    if (not config['use_fasttext']):
-        features_1 = np.load(dir +config['features_1'], mmap_mode='r')
-    else :
-        features_1 = np.load(dir +config['features_1.1'], mmap_mode='r')
-    features_2 = np.load(dir+config['features_2'], mmap_mode='r')
-    features_3 = np.load(dir+config['features_3'], mmap_mode='r')
-    input = [features_1, features_2, features_3]
-    out = np.load(dir + config['output'], mmap_mode='r')
+    input, out = load_data('train')
+    input_val, out_val = load_data('val')
 
     # Training Parameters
     batch_size = config['batch_size']
     epochs = config['epochs']
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
-    initial_learning_rate = 0.001
+    initial_learning_rate = config['learning_rate']
     if (config['use_decay']):
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
             initial_learning_rate,
