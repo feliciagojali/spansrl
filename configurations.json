@@ -23,7 +23,7 @@
         "mlp_pred_units": 350,
         "mlp_arg_units": 350,
         "span_width_emb": 20,
-        "batch_size": 6,
+        "batch_size": 4,
         "epochs": 240,
         "use_fasttext": false,
         "use_secondemb": true,
