@@ -17,11 +17,11 @@
         "lstm_layers": 2,
         "lstm_units": 200,
         "lstm_dropout": 0.4,
-        "num_heads": 1,
+        "num_heads": 2,
         "unary_depth": 2,
         "unary_units": 100,
-        "mlp_pred_units": 350,
-        "mlp_arg_units": 350,
+        "mlp_pred_units": 300,
+        "mlp_arg_units": 300,
         "span_width_emb": 20,
         "batch_size": 4,
         "epochs": 240,
@@ -42,7 +42,7 @@
         "processed_sent": "data/processed/sentences.npy",
         "processed_arg_list": "data/processed/arg_list.npy",
         "processed_padded_sent": "data/processed/padded_sent.npy",
-        "model_path":"models/wv_240_0.001_nopruning_2_unary100_mlp350"
+        "model_path":"models/wv_240_0.001_nopruning_2_unary100_2heads"
     },
     "fasttext": {
         "srl_labels": ["ARG0","ARG1","ARG2","AM-MOD","AM-ADV","REL","AM-TMP","AM-CAU","AM-LOC","AM-DIR", "AM-MNR","AM-DIS","AM-PRD","ARG3","ARG4","AM-LVB","AM-PRP","AM-COM","AM-GOL","AM-EXT","AM-REC","AM-NEG","AM-ADJ"],
