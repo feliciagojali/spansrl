@@ -50,7 +50,10 @@ def main():
     model = SRL(config)
     # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
-    model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback])
+    if (config['use_pruning']):
+        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
+    else:
+        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback])
     model.save(config['model_path'])
 
     eval_validation(config)
