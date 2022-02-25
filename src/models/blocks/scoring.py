@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dense, Dropout, Add, Concatenate
 
 from .functions import NullScores
-
+tf.random.set_seed(42)
 class Scoring(Layer):
     def __init__(self, config, output_size, name, **kwargs):
         super(Scoring, self).__init__(**kwargs)

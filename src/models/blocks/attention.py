@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dense, Softmax
-
+tf.random.set_seed(42)
 class Attention(Layer):
     def __init__(self, config, span_idx, **kwargs):
         super(Attention, self).__init__(**kwargs)

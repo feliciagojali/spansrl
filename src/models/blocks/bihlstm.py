@@ -1,6 +1,8 @@
+import tensorflow as tf
 from tensorflow.keras.layers import Layer, LSTM, Concatenate, Dropout
 
 from ..layers import Highway
+tf.random.set_seed(42)
 
 class BiHLSTM(Layer):
     def __init__(self, config, name, **kwargs):

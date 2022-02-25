@@ -1,8 +1,9 @@
 
+import tensorflow as tf
 from tensorflow.keras.layers import Layer,  Dense, Activation, Multiply, Add, Lambda
 from tensorflow.keras import backend as K
 from tensorflow.keras.initializers import Constant
-
+tf.random.set_seed(42)
 # Adopted from https://github.com/ParikhKadam/Highway-Layer-Keras
 class Highway(Layer):
 

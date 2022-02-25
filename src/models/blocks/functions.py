@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-
+tf.random.set_seed(42)
 
 class SpanEndpointsLength(Layer): 
     # To get endpoints representation for each span to build span representations

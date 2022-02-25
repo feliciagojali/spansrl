@@ -42,12 +42,12 @@ fi
 cd $FEATURES_PATH
 
 echo "Downloading features"
-gdown --id 1GZKlVWRDKqTEwB1HgSbofxzWzNhzv7d9
-gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
-unzip val_features.zip
-rum val_features.zip
-unzip train_features.zip
-rm train_features.zip
+gdown --id 101pl3KfSJ4DIUCZ7ha0_wJqzr6x41QvN
+gdown --id 10BMSZR4UE6PMPCS00xkxJTqc3wM6vDPA
+unzip new_val_features.zip
+rum new_val_features.zip
+unzip new_train_features.zip
+rm new_train_features.zip
 
 # gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
 # unzip val_features.zip
@@ -66,6 +66,6 @@ echo "Downloading processed data"
 # unzip batch1_processed.zip
 # rm batch1_processed.zip
 
-gdown --id 19D1dnT5vj-9Oh5n8LnWSJGyKGYX2mTCe
-unzip summary.zip
-rm summary.zip
+# gdown --id 19D1dnT5vj-9Oh5n8LnWSJGyKGYX2mTCe
+# unzip summary.zip
+# rm summary.zip

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-
+tf.random.set_seed(42)
 class Pruning(Layer):
     def __init__(self, max, **kwargs):
         self.max = max

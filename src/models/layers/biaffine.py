@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-
+tf.random.set_seed(42)
 # Adopted from https://github.com/PaddlePaddle/PaddleNLP/tree/develop
 
 class BiAffine(Layer):

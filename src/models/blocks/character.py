@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, TimeDistributed, Conv1D, Embedding, Dropout, MaxPooling1D, Flatten
+tf.random.set_seed(42)
 
 class CharacterEmbedding(Layer):
     def __init__(self, config, **kwargs):

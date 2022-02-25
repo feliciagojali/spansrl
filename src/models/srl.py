@@ -7,6 +7,7 @@ from utils import create_span
 
 import tensorflow as tf
 
+tf.random.set_seed(42)
 class SRL(Model):
 
     def __init__(self, config, **kwargs):
