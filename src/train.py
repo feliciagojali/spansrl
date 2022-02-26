@@ -47,10 +47,17 @@ def main():
     else:
         lr_schedule = initial_learning_rate
     model = SRL(config)
+
+    #checkpoint
+
+    bestCheckpoint = tf.keras.callbacks.ModelCheckpoint("models/best_model",
+                                            save_best_only=True)
+    lastCheckpoint = tf.keras.callbacks.ModelCheckpoint("models/last_checkpoint",
+                                            save_best_only=np.False_)
     # Compiling, fitting and saving model
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
     if (config['use_pruning']):
-        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback])
+        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
     else:
         model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback])
     model.save(config['model_path'])
