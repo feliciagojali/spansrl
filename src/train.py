@@ -3,7 +3,6 @@ import json
 import numpy as np
 import tensorflow as tf
 from models import SRL
-from keras import backend as K
 from utils import eval_validation, load_data
 
 def print_default():
