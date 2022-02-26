@@ -59,7 +59,7 @@ def main():
     if (config['use_pruning']):
         model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
     else:
-        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback])
+        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs,  callbacks=[callback, bestCheckpoint, lastCheckpoint])
     model.save(config['model_path'])
 
     eval_validation(config)
