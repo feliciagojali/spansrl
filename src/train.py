@@ -30,7 +30,7 @@ def main():
 
 
     # Features loading
-    input, out = load_data(config, 'train')
+    input, out = load_data(config, 'val')
     input_val, out_val = load_data(config, 'val')
 
     # Training Parameters
