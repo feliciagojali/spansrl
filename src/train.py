@@ -30,7 +30,7 @@ def main():
 
 
     # Features loading
-    input, out = load_data(config, 'val')
+    input, out = load_data(config, 'train')
     input_val, out_val = load_data(config, 'val')
 
     # Training Parameters
@@ -59,7 +59,7 @@ def main():
     if (config['use_pruning']):
         model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
     else:
-        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs,  callbacks=[callback, bestCheckpoint, lastCheckpoint])
+        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
     model.save(config['model_path'])
 
     eval_validation(config)
