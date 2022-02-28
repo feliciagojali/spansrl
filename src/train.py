@@ -38,16 +38,17 @@ def main():
     print(f"Taken GPU: {taken_gpu}")
     strategy = tf.distribute.MirroredStrategy(devices=taken_gpu)
 
-    with strategy.scope():
-        # Features loading
-        input, out = load_data(config, 'train')
-        input_val, out_val = load_data(config, 'val')
+    # Features loading
+    input, out = load_data(config, 'train')
+    input_val, out_val = load_data(config, 'val')
 
-        # Training Parameters
-        batch_size = config['batch_size']
-        epochs = config['epochs']
-        callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
-        initial_learning_rate = config['learning_rate']
+    # Training Parameters
+    batch_size = config['batch_size']
+    epochs = config['epochs']
+    callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
+    initial_learning_rate = config['learning_rate']
+    
+    with strategy.scope():
         if (config['use_decay']):
             lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
                 initial_learning_rate,
@@ -56,6 +57,7 @@ def main():
                 staircase=True)
         else:
             lr_schedule = initial_learning_rate
+        
         model = SRL(config)
 
         #checkpoint
@@ -66,13 +68,13 @@ def main():
                                                 save_best_only=np.False_)
         # Compiling, fitting and saving model
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
-        if (config['use_pruning']):
-            model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
-        else:
-            model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
-        model.save(config['model_path'])
+    if (config['use_pruning']):
+        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
+    else:
+        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
+    model.save(config['model_path'])
 
-        eval_validation(config)
+    eval_validation(config)
     
 
      
