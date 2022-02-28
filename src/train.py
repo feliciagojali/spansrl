@@ -29,6 +29,7 @@ def main():
         config = all_config[default]
 
     devices = tf.config.experimental.list_physical_devices("GPU")
+    print(devices)
     device_names = [d.name.split("e:")[1] for d in devices]
     config_taken = [2, 3, 4, 5]
     taken_gpu = []
