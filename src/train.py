@@ -30,7 +30,7 @@ def main():
 
     devices = tf.config.experimental.list_physical_devices("GPU")
     device_names = [d.name.split("e:")[1] for d in devices]
-    config_taken = [x for x in range(8)]
+    config_taken = [2, 3, 4, 5]
     taken_gpu = []
     for i, device_name in enumerate(device_names):
         if i in config_taken:
