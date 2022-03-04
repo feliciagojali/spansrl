@@ -1,9 +1,10 @@
-from re import sub
-from tqdm import tqdm
-import numpy as np
 import torch
+from re import sub
+import numpy as np
+from tqdm import tqdm
 import tensorflow as tf
-## BERT functions
+from sklearn.model_selection import train_test_split
+
 def extract_bert(model, tokenizer, sentences, max_tokens, device):
     bert_features = [bert_sent(sent, model, tokenizer, max_tokens, device) for  sent in sentences]
     return bert_features
@@ -107,54 +108,57 @@ def remove_sep(inputs, len_tokens):
     del offset_ids[start_id]
     return ids, offset_ids
 
-def extract_pas_index(pas_list, tokens, max_tokens, max):
+def extract_pas_index(pas_list, tokens, max_tokens):
     # Looping each PAS for every predicate
     max_sent = -1
     arg_list = []
     for PAS in pas_list:
         PAS = PAS.strip()
-        # Array: (num_labels) : (AO, A0..)
-        srl_labels = PAS.split(' ')
+        if (PAS == ''):
+            continue
+        # Array: (num_labels) : (B-AO, I-A0..)
+        srl_labels_ = PAS.split(' ')
         # Check label length and sentence length
-        if (len(srl_labels) != len(tokens)):
+        if (len(srl_labels_) != len(tokens)):
             print('Tokens and labels do not sync = '+ str(tokens))
             continue
 
-        srl_labels, pad_sent = pad_input([srl_labels, tokens], max_tokens, 'O')
+        srl_labels_, pad_sent = pad_input([srl_labels_, tokens], max_tokens, 'O')
         sentence_args_pair = {
             'id_pred': 0,
             'pred': '',
             'args': []
         }
         # Current labels such as = A0, A1, O
-        cur_label = srl_labels[0]
+        srl_labels = [] 
+        for srl in srl_labels_:
+            if (srl == 'O'):
+                srl_labels.append(['O','O'])
+            else:
+                bio, label = split_first(srl,'-')
+                srl_labels.append([bio, '-'.join(label)])
+        cur_label = 'O'
         # start idx and end ix of each labels
         start_idx = 0
         end_idx = 0
+
+            
         for idx, srl_label in enumerate(srl_labels):
-            if (srl_label != cur_label):
+            if ((len(srl_label) == 2 and srl_label[0] != 'I') or len(srl_label) == 1):
                 if (cur_label == 'REL'):
                     sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
-                    print(sentence_args_pair['pred'])
                     sentence_args_pair['id_pred'] = [start_idx,end_idx]
                 elif (cur_label != 'O') :
                     temp = [start_idx, end_idx , cur_label]
-                    if (end_idx-start_idx + 1 > max):
-                        max = end_idx-start_idx + 1
-                        max_sent = tokens
                     sentence_args_pair['args'].append(temp)
-                cur_label = srl_label
+                cur_label = srl_label[1] if len(srl_label) == 2 else 'O'
                 start_idx = idx
             end_idx = idx
         # Handle last label
         if (cur_label == 'REL'):
             sentence_args_pair['pred'] = pad_sent.tolist()[start_idx: end_idx+1]
-            print(sentence_args_pair['pred'])
             sentence_args_pair['id_pred'] = [start_idx,end_idx]
         elif (cur_label != 'O') :
-            if (end_idx-start_idx + 1 > max):
-                max = end_idx-start_idx + 1
-                max_sent = tokens
             temp = [start_idx, end_idx , cur_label]
             sentence_args_pair['args'].append(temp)
         # Append for different PAS, same sentences
@@ -162,7 +166,7 @@ def extract_pas_index(pas_list, tokens, max_tokens, max):
             print('These sentences do not have verb label in it ='+str(tokens))
             continue
         arg_list.append(sentence_args_pair)
-    return arg_list, max, max_sent
+    return arg_list, max_sent
 
 def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_idx_mask=None, pred_idx_mask=None):
     arr = [[] for _ in range(num_sent)]
@@ -254,18 +258,20 @@ def _print_f1(total_gold, total_predicted, total_matched, message=""):
     return precision, recall, f1
 
 
-def split_into_batch(data, n, type):
-    batch = round(len(data) / n)
-
-    start = 0
-    for i in range(n):
-        if (i != n-1):
-            d = data[start: start+batch]
-        else:
-            d = data[start:]
-        start+=batch
-
-        np.save('../data/'+type+'_sum_sent_'+str(i+1), d)
+    
+def split_train_test_val(features_1, features_11, features_2, features_3, out, sentences, config):
+    f1_train, f1_test,f11_train, f11_test, f2_train, f2_test, f3_train, f3_test, out_train, out_test, sent_train, sent_test= train_test_split(features_1, features_11, features_2, features_3, out, sentences, test_size=0.4,train_size=0.6)
+    f1_test, f1_val, f11_test, f11_val, f2_test, f2_val, f3_test, f3_val, out_test,out_val, sent_test, sent_val= train_test_split(f1_test, f11_test, f2_test,f3_test,out_test,sent_test, test_size = 0.5,train_size =0.5)
+    type = {
+        "train": [f1_train, f11_train, f2_train, f3_train, out_train, sent_train],
+        "test": [f1_test, f11_test, f2_test,f3_test, out_test, sent_test],
+        "val": [f1_val, f11_val, f2_val, f3_val, out_val, sent_val]
+    }
+    dir = config['features_dir']
+    filename = [config['features_1'], config['features_1.1'], config['features_2'],config['features_3'], config['output'], 'sentences.npy']
+    for key, val in type.items():
+        for typ, name in zip(val, filename):
+            np.save(dir+str(key)+'_'+name, typ)
 
 def create_span(length, max_span_length):
     span_start = []
@@ -284,3 +290,11 @@ def create_span(length, max_span_length):
 
     # Shape span_start, span_end: [num_spans]
     return span_start, span_end, span_width
+
+
+def pad_sentences(sentences, max_tokens, isArray=False):
+    if (isArray):
+        padded = [pad_input(sent, max_tokens) for sent in sentences]
+    else:
+        padded = pad_input(sentences, max_tokens)
+    return padded

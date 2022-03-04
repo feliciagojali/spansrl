@@ -1,16 +1,11 @@
 #! /bin/bash
 
 DATA_PATH="./data"
-if [ ! -d $DATA_PATH ]; then
-  mkdir -p $DATA_PATH
-fi
+RAW_PATH="./raw"
+FEATURES_PATH="./features"
+RESULTS_PATH = "./results"
 
 cd $DATA_PATH
-
-RAW_PATH="./raw"
-PRETRAINED_PATH="./pretrained"
-PROCESSED_PATH="./processed"
-FEATURES_PATH="./features"
 
 # if [ ! -d $RAW_PATH ]; then
 #   mkdir -p $RAW_PATH
@@ -21,19 +16,6 @@ FEATURES_PATH="./features"
 
 # cd ".."
 
-if [ ! -d $PRETRAINED_PATH ]; then
-  mkdir -p $PRETRAINED_PATH
-fi
-
-cd $PRETRAINED_PATH
-
-# echo "Downloading pretrained models and data"
-# gdown --id 1vL8vyfJbaj3i91peTu738jq25N-yhsU3
-# gdown --id 1MQjcRLBCJsdk3AyCBWfAkltzRTHhI9ED
-# unzip word2vec_news.model.wv.vectors.zip
-# rm word2vec_news.model.wv.vectors.zip
-
-cd ".."
 
 if [ ! -d $FEATURES_PATH ]; then
   mkdir -p $FEATURES_PATH
@@ -53,17 +35,6 @@ unzip train_features.zip
 
 cd ".."
 
-if [ ! -d $PROCESSED_PATH ]; then
-  mkdir -p $PROCESSED_PATH
+if [ ! -d $RESULTS_PATH ]; then
+  mkdir -p $RESULTS_PATH
 fi
-
-cd $PROCESSED_PATH
-
-echo "Downloading processed data"
-# gdown --id 1MwGa6GQKQU5ETqKTB3DdCDfIetH7edOv
-# unzip batch1_processed.zip
-# rm batch1_processed.zip
-
-# gdown --id 19D1dnT5vj-9Oh5n8LnWSJGyKGYX2mTCe
-# unzip summary.zip
-# rm summary.zip

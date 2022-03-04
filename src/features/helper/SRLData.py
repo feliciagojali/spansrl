@@ -2,17 +2,15 @@
 
 import os
 import sys
-from collections import Counter
-
-from .helper import create_span, save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
+import time
+import torch
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModel
+from collections import Counter
 from gensim.models import fasttext, Word2Vec
-import time
-import sys
-import torch
+from transformers import AutoTokenizer, AutoModel
+from .helper import pad_sentences, create_span, save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
 
 class SRLData(object):
     def __init__(self, config, emb=True):
@@ -41,7 +39,7 @@ class SRLData(object):
             self.word_vec = Word2Vec.load(config['word_emb_path']).wv
             self.word_emb_w2v = []
 
-            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            self.device = "cuda:4" if torch.cuda.is_available() else "cpu"
             self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
             self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
             self.word_emb_2 = []
@@ -52,12 +50,38 @@ class SRLData(object):
         # Dict
         self.labels_mapping = label_encode(config['srl_labels'])
 
+    # To convert raw data to arg list and sentences
+    def read_raw_data(self):
+        try:
+            file = open(self.config['train_data'], encoding='utf-16')
+            lines = file.readlines()
+        except:
+            file = open(self.config['train_data'])
+            lines = file.readlines()
+        sentences = []
+        arg_lists = []
+        for pairs in lines:
+            # Split sent, label list
+            sent, PASList = split_first(pairs, ';')
+            tokens = sent.split(' ')
+            arg_list, sent = extract_pas_index(PASList, tokens, self.max_tokens)
 
+            # Append for differents sentences
+            sentences.append(tokens)
+            arg_lists.append(arg_list)
+        return sentences, arg_lists
+
+    # Extract features from sentences
+    def extract_features(self, sentences):
+        padded_sent = pad_sentences(sentences, self.max_tokens)
+        self.word_emb_ft = self.extract_ft_emb(padded_sent)
+        self.word_emb_w2v = self.extract_word_emb(padded_sent)
+        self.word_emb_2 = self.extract_bert_emb(sentences)    
+        self.char_input = self.extract_char(padded_sent)
+    
     # To convert train data labels to output models
-    def convert_train_output(self):
-        sentences = np.load(self.config['processed_sent'], allow_pickle=True)
-        arg_list = np.load(self.config['processed_arg_list'], allow_pickle=True)
-        batch_size = len(sentences)
+    def convert_train_output(self, arg_list):
+        batch_size = len(arg_list)
         pred_start, _, _ = self.pred_span_idx
         arg_start, _, _ = self.arg_span_idx
 
@@ -91,99 +115,9 @@ class SRLData(object):
             sent, num_pred, num_spans, idx = id
             initialData[sent][num_pred][num_spans][idx] = 1
             initialData[sent][num_pred][num_spans][self.num_labels] = 0
-        save_emb(initialData, "train", "output")
-        print(initialData.shape)
-
-    def extract_features(self, sentences, isSum=False):
-        # sentences = np.load(self.config['processed_sent'], allow_pickle=True)
-        padded_sent = self.pad_sentences(sentences, isArray=isSum)
-        if (isSum):
-            # padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            # self.word_emb_ft = [self.extract_ft_emb(padded) for padded in (padded_sent)]  
-            # np.save('../data/'+type+'_sum_ft_'+str(id)+'.npy', self.word_emb_ft) 
-            print("-- extracting w2v features --")
-            self.word_emb_w2v = [self.extract_word_emb(padded) for padded in tqdm((padded_sent), position=0, leave=True)]
-            # np.save('../data/'+type+'_sum_w2v_'+str(id)+'.npy', self.word_emb_w2v)
-            print("-- extracting char features --")
-            self.char_input = [self.extract_char(sent) for sent in tqdm(padded_sent, position=0, leave=True)]
-            # np.save('../data/'+type+'_sum_char_'+str(id)+'.npy', self.char_input)
-            print("-- extracting bert features --")
-
-            self.word_emb_2 = [self.extract_bert_emb(sent) for sent in tqdm(sentences, position=0, leave=True)]
-        #     # word_emb_2 = []
-           
-
-        else:
-            padded_sent = np.load(self.config['processed_padded_sent'], allow_pickle=True)
-            self.word_emb_w2v = self.extract_word_emb(padded_sent)
-            self.word_emb_ft = self.extract_ft_emb(padded_sent)
-            # self.word_emb_2 = self.extract_bert_emb(sentences)    
-            # self.char_input = self.extract_char(padded_sent)
-
+        return initialData
     
-        # # save_emb(self.word_emb_w2v, 'word_emb_w2v_1', type, isSum)
-        # # save_emb(self.word_emb_ft, 'word_emb_ft_15', type, isSum)
-        # np.save(type+ "_sum_bert_"+ str(id) + "." + str(k)+ ".npy", self.word_emb_2)
-        # save_emb(self.word_emb_2, 'bert', type, isSum)
-        # save_emb(self.char_input, 'char_input_5', type, isSum)
-        # print(self.word_emb.shape)
-        # print(self.word_emb_2.shape)
-        # print(self.char_input.shape)
-    
-    def extract_word_emb(self, padded_sent):
-        word_emb = np.zeros(shape=(len(padded_sent), self.max_tokens, 300), dtype='float32')
-        for i, sent in enumerate(padded_sent):
-            for j, word in enumerate(sent):
-                if (word == '<pad>' or not self.word_vec.has_index_for(word.lower())):
-                    continue
-                word_vec = self.word_vec[word.lower()]
-                word_emb[i][j] = word_vec
-        return word_emb        
-
-    def extract_sec_emb(self, sentences):
-        if (self.use_fasttext):
-            return self.extract_ft_emb(sentences, self.padded_sent)
-        else:
-            return self.extract_bert_emb(sentences)
-    def extract_bert_emb(self, sentences): # sentences : Array (sent)
-        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.device)
-        bert_emb = np.array(bert_emb)
-        return bert_emb
-        
-
-    def extract_ft_emb(self, padded_sent):  # sentences : Array (sent)
-        word_emb = np.ones(shape=(len(padded_sent), self.max_tokens, 300), dtype='float32')
-        for i, sent in (enumerate(padded_sent)):
-            for j, word in enumerate(sent):
-                if (word == '<pad>'):
-                    word_vec = np.zeros(300,dtype='int8')
-                else:
-                    word_vec = self.fast_text[word.lower()]
-                word_emb[i][j] = word_vec
-        return word_emb
-    
-    def extract_char(self, sentences): # sentences: Array (sent)
-        char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char), dtype='int8')
-        for i, sent in enumerate(sentences):
-            for j, word in enumerate(sent):
-                if (word == '<pad>'):
-                    continue
-                char_encoded = [self.char_dict[x]  if x in self.char_dict else self.char_dict['<unk>'] for x in word]
-                if (len(char_encoded) >= self.max_char):
-                    char[i][j] = char_encoded[:self.max_char]
-                else:
-                    char[i][j][:len(char_encoded)] = char_encoded
-        return char
-
-    def pad_sentences(self, sentences, isArray=False):
-        if (isArray):
-            padded = [pad_input(sent, self.max_tokens) for sent in sentences]
-        else:
-            padded = pad_input(sentences, self.max_tokens)
-        return padded
-        # np.save('../data/'+types+'_sum_padded_sent_' +str(id)+'.npy', padded)
-        # save_npy(self.config['processed_padded_sent'], padded)
-
+    # Convert output model to readable argument lists
     def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
         labels_list = list(self.labels_mapping.keys())
         ## Max = 1
@@ -198,6 +132,7 @@ class SRLData(object):
         pas = convert_idx(ids, len(out), self.arg_span_idx, self.pred_span_idx, labels_list, arg_mask, pred_mask)
         return pas
 
+    # Evaluate prediction and real, input is readable arg list
     def evaluate(self, y, pred):
         # Adopted from unisrl
         total_gold = 0
@@ -256,23 +191,42 @@ class SRLData(object):
 
         return
 
+    ## Functions for extracting features
+    def extract_word_emb(self, padded_sent):
+        word_emb = np.zeros(shape=(len(padded_sent), self.max_tokens, 300), dtype='float32')
+        for i, sent in enumerate(padded_sent):
+            for j, word in enumerate(sent):
+                if (word == '<pad>' or not self.word_vec.has_index_for(word.lower())):
+                    continue
+                word_vec = self.word_vec[word.lower()]
+                word_emb[i][j] = word_vec
+        return word_emb        
 
-    def read_raw_data(self):
-        file = open(os.getcwd() +self.config['train_data'], 'r')
-        lines = file.readlines()
-        max = 0
-        sentences = []
-        arg_lists = []
-        for pairs in lines:
-            # Split sent, label list
-            sent, PASList = split_first(pairs, ';')
-            tokens = sent.split(' ')
-            arg_list, max, sent = extract_pas_index(PASList, tokens, self.max_tokens, max)
+    def extract_ft_emb(self, padded_sent):  # sentences : Array (sent)
+        word_emb = np.ones(shape=(len(padded_sent), self.max_tokens, 300), dtype='float32')
+        for i, sent in (enumerate(padded_sent)):
+            for j, word in enumerate(sent):
+                if (word == '<pad>'):
+                    word_vec = np.zeros(300,dtype='int8')
+                else:
+                    word_vec = self.fast_text[word.lower()]
+                word_emb[i][j] = word_vec
+        return word_emb
 
-            # Append for differents sentences
-            sentences.append(tokens)
-            arg_lists.append(arg_list)
-        save_npy(self.config['processed_sent'], sentences)
-        save_npy(self.config['processed_arg_list'], arg_lists)
+    def extract_bert_emb(self, sentences): # sentences : Array (sent)
+        bert_emb = extract_bert(self.bert_model, self.bert_tokenizer, sentences, self.max_tokens, self.device)
+        bert_emb = np.array(bert_emb)
+        return bert_emb
 
-        
+    def extract_char(self, sentences): # sentences: Array (sent)
+        char = np.zeros(shape=(len(sentences), self.max_tokens, self.max_char), dtype='int8')
+        for i, sent in enumerate(sentences):
+            for j, word in enumerate(sent):
+                if (word == '<pad>'):
+                    continue
+                char_encoded = [self.char_dict[x]  if x in self.char_dict else self.char_dict['<unk>'] for x in word]
+                if (len(char_encoded) >= self.max_char):
+                    char[i][j] = char_encoded[:self.max_char]
+                else:
+                    char[i][j][:len(char_encoded)] = char_encoded
+        return char

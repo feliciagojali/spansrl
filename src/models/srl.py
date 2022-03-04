@@ -1,7 +1,7 @@
 from tensorflow.keras.models import Model
 
 from tensorflow.keras.layers import Concatenate, Dropout, Dense, Embedding, Softmax, Input
-from .blocks import Pruning, Attention, BiHLSTM, SpanEndpointsLength, Scoring, ComputeScoring, CharacterEmbedding, PredicateArgumentEmb
+from .blocks import Pruning, CustomAttention, BiHLSTM, SpanEndpointsLength, Scoring, ComputeScoring, CharacterEmbedding, PredicateArgumentEmb
 from .layers import BiAffine
 from utils import create_span
 
@@ -36,14 +36,14 @@ class SRL(Model):
 
         # Span representation for argument 
         self.arg_endpoints_len = SpanEndpointsLength(self.arg_span_idx, name="arg_endpoints_and_length")
-        self.arg_attention = Attention(config, self.arg_span_idx, name="arg_attention_head")
+        self.arg_attention = CustomAttention(config, self.arg_span_idx, name="arg_attention_head")
         self.arg_length_emb = Embedding(input_dim=self.max_arg_span+1, output_dim=config['span_width_emb'], name='arg_width_emb')
         self.concatenate_2 = Concatenate(name='arg_span_representation')
 
         # Span representation for predicate 
         if (self.max_pred_span > 1):
             self.pred_endpoints_len = SpanEndpointsLength(self.pred_span_idx, name="pred_endpoints_and_length")
-            self.pred_attention = Attention(config, self.pred_span_idx, name="pred_attention_head")
+            self.pred_attention = CustomAttention(config, self.pred_span_idx, name="pred_attention_head")
             self.pred_length_emb = Embedding(input_dim=self.max_pred_span+1, output_dim=config['max_pred_span'], name="pred_width_emb")
             self.concatenate_3 = Concatenate(name='pred_span_representation')
 

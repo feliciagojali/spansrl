@@ -1,9 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dense, Softmax
 tf.random.set_seed(42)
-class Attention(Layer):
+class CustomAttention(Layer):
     def __init__(self, config, span_idx, **kwargs):
-        super(Attention, self).__init__(**kwargs)
+        super(CustomAttention, self).__init__(**kwargs)
         self.num_heads = config['num_heads']
         self.dense = Dense(self.num_heads, activation='relu', name='head_scores')
         self.softmax = Softmax(axis=2)
