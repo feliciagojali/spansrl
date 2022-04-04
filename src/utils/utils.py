@@ -39,6 +39,9 @@ def eval_test(config):
         res =  data.convert_result_to_readable(pred)
     real = data.convert_result_to_readable(out)
     data.evaluate(real, res)
+    with open('data/results/test_'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
+        for item in res:
+            f.write("%s\n" %str(item))
 
 def eval_validation(config, full):
     input, out = load_data(config, 'val', full)

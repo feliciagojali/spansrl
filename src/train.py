@@ -4,7 +4,8 @@ import numpy as np
 import tensorflow as tf
 from models import SRL
 from utils import eval_validation, load_data, print_default
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="2, 3"
 
 def main():
     config = sys.argv[1]
@@ -21,7 +22,7 @@ def main():
     # Multi GPU
     devices = tf.config.experimental.list_physical_devices("GPU")
     device_names = [d.name.split("e:")[1] for d in devices]
-    config_taken = [5, 7]
+    config_taken = [0,1]
     taken_gpu = []
     for i, device_name in enumerate(device_names):
         if i in config_taken:
@@ -29,7 +30,7 @@ def main():
     print(f"Taken GPU: {taken_gpu}")
     strategy = tf.distribute.MirroredStrategy(devices=taken_gpu)
 
-    ## Temp code to handle multi GPU
+    # Temp code to handle multi GPU
     ## TO DO: REMOVE
     if len(sys.argv) > 1 and sys.argv[1] == 'full' :
         full = True
@@ -70,15 +71,17 @@ def main():
                                                 save_best_only=True)
         lastCheckpoint = tf.keras.callbacks.ModelCheckpoint("models/last_checkpoint",
                                                 save_best_only=False)
+        pruningCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['model_path'],
+                                                save_best_only=False)
         # Compiling, fitting and saving model
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss=tf.keras.losses.CategoricalCrossentropy())
     
     if (config['use_pruning']):
-        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
+        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, pruningCheckpoint])
     else:
         model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
-    
-    with tf.device('/gpu:7'):
+
+    with tf.device('/gpu:0'):
         # Validation result
         eval_validation(config, False)
 

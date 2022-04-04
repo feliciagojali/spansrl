@@ -17,7 +17,7 @@ except:
 
 print('Validating ' + str(sys.argv[2]) + ' data with model ' + config['model_path'])
 
-with tf.device('/gpu:5'):
+with tf.device('/gpu:4'):
     if (sys.argv[2] == 'test'): 
         eval_test(config)
     else:

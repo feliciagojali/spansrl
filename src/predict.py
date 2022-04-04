@@ -16,7 +16,7 @@ all_config = json.load(f)
 
 
 
-with tf.device('/gpu:3'):
+with tf.device('/gpu:4'):
     try:
         config = all_config[config]
     except:
