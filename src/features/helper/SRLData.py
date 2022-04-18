@@ -38,7 +38,7 @@ class SRLData(object):
             self.word_emb_ft = []
             self.word_vec = Word2Vec.load(config['word_emb_path']).wv
             self.word_emb_w2v = []
-            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            self.device = "cuda:1" if torch.cuda.is_available() else "cpu"
             self.bert_model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1").to(self.device)
             self.bert_tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1", padding_side='right')
             self.word_emb_2 = []

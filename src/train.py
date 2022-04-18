@@ -5,7 +5,7 @@ import tensorflow as tf
 from models import SRL
 from utils import eval_validation, load_data, print_default
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="2, 3"
+os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"
 
 def main():
     config = sys.argv[1]
@@ -22,7 +22,7 @@ def main():
     # Multi GPU
     devices = tf.config.experimental.list_physical_devices("GPU")
     device_names = [d.name.split("e:")[1] for d in devices]
-    config_taken = [0,1]
+    config_taken = [0,1,2,3]
     taken_gpu = []
     for i, device_name in enumerate(device_names):
         if i in config_taken:
@@ -32,16 +32,10 @@ def main():
 
     # Temp code to handle multi GPU
     ## TO DO: REMOVE
-    if len(sys.argv) > 1 and sys.argv[1] == 'full' :
-        full = True
-    else:
-        full = False
     
-    full = True
-
     # Features loading
-    input, out = load_data(config, 'train', full)
-    input_val, out_val = load_data(config, 'val', full)
+    input, out = load_data(config, 'train')
+    input_val, out_val = load_data(config, 'val')
 
     # Training Parameters
     batch_size = config['batch_size']
@@ -83,7 +77,7 @@ def main():
 
     with tf.device('/gpu:0'):
         # Validation result
-        eval_validation(config, False)
+        eval_validation(config)
 
 if __name__ == "__main__":
     main()
