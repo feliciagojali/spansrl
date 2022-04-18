@@ -58,7 +58,7 @@ def eval_validation(config):
         res =  data.convert_result_to_readable(pred)
     real = data.convert_result_to_readable(out)
     data.evaluate(real, res)
-    with open('data/results/new/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
+    with open('data/results/'+ config['model_path'].split('/')[1]+'.txt', 'w') as f:
         for item in res:
             f.write("%s\n" %str(item))
 

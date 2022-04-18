@@ -35,7 +35,7 @@ def main():
     
     # Features loading
     input, out = load_data(config, 'train')
-    input_val, out_val = load_data(config, 'val')
+    # input_val, out_val = load_data(config, 'val')
 
     # Training Parameters
     batch_size = config['batch_size']
@@ -43,7 +43,6 @@ def main():
     initial_learning_rate = config['learning_rate']
 
     print(len(input[0]))
-    print(len(input_val[0]))
     # with strategy.scope():
     # with tf.device('/gpu:7'):
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
@@ -73,7 +72,7 @@ def main():
     if (config['use_pruning']):
         model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, pruningCheckpoint])
     else:
-        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
+        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
 
     with tf.device('/gpu:0'):
         # Validation result
