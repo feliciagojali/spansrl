@@ -26,10 +26,10 @@ cd $FEATURES_PATH
 echo "Downloading features"
 gdown --id 1-SmXIY2NuQLTLnl9qT0Abya3GMSHpilO
 gdown --id 1cTc0An2FSXX-z3zod_UYA737NDh9gxR5
-unzip val_features.zip
-unzip train_features.zip
-tar –xvf val_features_final.tar
-tar –xvf train_features_final.tar
+gzip -d train_features.tar.gz
+gzip -d val_features.tar.gz
+tar -xf train_features.tar
+tar -xf train_features_final.tar
 
 # gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
 # unzip val_features.zip
