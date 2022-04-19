@@ -3,6 +3,8 @@ import json
 import numpy as np
 import tensorflow as tf
 from models import SRL
+from tensorflow.keras.models import load_model
+
 from utils import eval_validation, load_data, print_default
 # import os
 # os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"
@@ -47,18 +49,16 @@ def main():
     # with tf.device('/gpu:7'):
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     print(config)
-    if (config['use_decay']):
-        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate,
-            decay_steps=100,
-            decay_rate=0.999,
-            staircase=True)
-    else:
-        lr_schedule = initial_learning_rate
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate,
+        decay_steps=100,
+        decay_rate=0.999,
+        staircase=True)
+
     
     # Define model
-    model = SRL(config)
-
+    # model = SRL(config)
+    model = load_model("../drive/MyDrive/TA/last_checkpoint")
     # Checkpoint
     bestCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['model_path'],
                                             save_best_only=True)
