@@ -14,7 +14,7 @@
         "emb_dropout": 0.5,
         "char_list": " 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,-_()[]{}!?:;#'\"/\\%$`&=*+@^~|",
         "dropout_value": 0.2,
-        "lstm_layers": 3,
+        "lstm_layers": 2,
         "lstm_units": 200,
         "lstm_dropout": 0.4,
         "num_heads": 1,
