@@ -62,7 +62,7 @@ def main():
     # Checkpoint
     bestCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['model_path'],
                                             save_best_only=True)
-    lastCheckpoint = tf.keras.callbacks.ModelCheckpoint("models/last_checkpoint",
+    lastCheckpoint = tf.keras.callbacks.ModelCheckpoint("../drive/MyDrive/TA/last_checkpoint",
                                             save_best_only=False)
     pruningCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['model_path'],
                                             save_best_only=False)
