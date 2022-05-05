@@ -20,7 +20,6 @@ class SRL(Model):
         self.max_char = config['max_char']
         self.arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
         self.pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
-        self.second_emb = config['use_secondemb']
         # Blocks and Layers
         self.character_block = CharacterEmbedding(config, name="character_embedding")
         # More embedding layer for wword emb and elmo?
@@ -73,18 +72,12 @@ class SRL(Model):
         # Shape word_emb: (batch_size, max_tokens, emb)
         # Shape elmo_emb: (batch_size, max_tokens, emb)
         # Shape char_input: (batch_size, max_tokens, max_char)
-        if (self.second_emb):
-            word_emb, elmo_emb, char_input = inputs
-        else:
-            word_emb, char_input = inputs
+        word_emb, elmo_emb, char_input = inputs
         # Shape char_emb: (batch_size, max_tokens, char_output_dim)
         char_emb = self.character_block(char_input)
 
         # Shape token_rep: (batch_size, max_tokens, emb)
-        if (self.second_emb):
-            token_rep = self.concatenate_1([word_emb, elmo_emb, char_emb])
-        else:
-            token_rep = self.concatenate_1([word_emb, char_emb])
+        token_rep = self.concatenate_1([word_emb, elmo_emb, char_emb])
         token_rep = self.dropout_1(token_rep)
         token_rep = self.bihlstm(token_rep)
 
