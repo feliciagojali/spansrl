@@ -3,7 +3,7 @@ valconfig := validation
 file := result.txt
 
 train: src/train.py
-	python3 src/train.py $(config) > $(config).txt
+	python3 src/train.py $(config) > $(config)2.txt
 
 validate: src/validate.py data/scores/
 	python3 src/validate.py $(valconfig) val > data/scores/current_val.txt

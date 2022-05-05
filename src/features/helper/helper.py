@@ -1,5 +1,4 @@
 import torch
-from re import sub
 import numpy as np
 from tqdm import tqdm
 from collections import Counter
@@ -201,7 +200,6 @@ def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, max_
             arr[sent].append(sentence_args_pair)
         cur_sent = sent
     if (use_constraint):
-        print('use constraint')
         arr = filter_no_overlapping_spans(arr, all_val)
     return arr
 
@@ -253,32 +251,11 @@ def filter_no_overlapping_spans(arr, value):
                     not_chosen = sorted(list(set(sorted_overlap) - set(chosen)))
                     for o in not_chosen:
                         overlapped_pas.append([i, j, o])
-    
-    for id in reversed(overlapped_pas):
+    overlapped_pas = sorted(overlapped_pas, key=lambda x:(-x[1], -x[2]))
+    for id in overlapped_pas:
         i, j, o = id
         del arr[i][j]['args'][o]
     return arr           
-                        
-                    
-def filter_no_multiple_core_arguments(arr, value):
-    duplicated_core_args = []
-    for i, (sent, val_sent) in enumerate(zip(arr, value)):
-        for j, (pas, val_pas) in enumerate(zip(sent, val_sent)):
-            pas_args = [pas_arg[2] for pas_arg in pas['args']]
-            counter = Counter(pas_args)
-            for core_arg in core_arguments:
-                if core_arg in counter and counter[core_arg] > 1 :
-                    pas_ids = [k for k, x in enumerate(pas_args) if x == core_arg]
-                    value_comparison = [val_pas[k] for k in pas_ids]
-                    max_id = pas_ids[np.argmax(value_comparison)]
-                    removed_ids = list(set(pas_ids) - set(max_id))
-                    for id in removed_ids:
-                        duplicated_core_args.append([i, j, id])
-    
-    for id in reversed(duplicated_core_args):
-        i, j, o = id
-        del arr[i][j]['args'][id]
-    return arr
 
 def pad_input(data, max_token, pad_char='<pad>'):
     padded_data = np.full(shape=(len(data), max_token), fill_value=pad_char, dtype='object')

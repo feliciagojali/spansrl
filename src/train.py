@@ -37,7 +37,7 @@ def main():
     
     # Features loading
     input, out = load_data(config, 'train')
-    # input_val, out_val = load_data(config, 'val')
+    input_val, out_val = load_data(config, 'val')
 
     # Training Parameters
     batch_size = config['batch_size']
@@ -74,8 +74,7 @@ def main():
     else:
         model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
 
-    with tf.device('/gpu:0'):
-        # Validation result
+    with tf.device('/gpu:1'):
         eval_validation(config)
 
 if __name__ == "__main__":
