@@ -40,7 +40,7 @@ def eval_test(config):
     real = data.convert_result_to_readable(out)
     data.evaluate(real, res)
     cons = 'constraint' if config['use_constraint'] else ''
-    with open('data/results/new/test_'+ cons + '_' + config['model_path'].split('/')[1]+'.txt', 'w') as f:
+    with open('data/results/test_'+ cons + '_' + config['model_path'].split('/')[1]+'.txt', 'w') as f:
         for item in res:
             f.write("%s\n" %str(item))
 
@@ -61,7 +61,7 @@ def eval_validation(config):
     data.evaluate(real, res)
     cons = 'constraint' if config['use_constraint'] else ''
 
-    with open('data/results/new/val_'+ cons +'_' + config['model_path'].split('/')[1]+'.txt', 'w') as f:
+    with open('data/results/val_'+ cons +'_' + config['model_path'].split('/')[1]+'.txt', 'w') as f:
         for item in res:
             f.write("%s\n" %str(item))
 

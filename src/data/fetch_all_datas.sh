@@ -24,12 +24,14 @@ fi
 cd $FEATURES_PATH
 
 echo "Downloading features"
-gdown --id 11iUWswsf32A1fVtOEEYu6Q8muIGxI1EQ
-gdown --id 11fqoZU3Pxhap8fwvuib03kXxxd6NU5UG
-gdown --id 1-mXjuMTll3Hkn1vn-rzcywn37M7b_cD0
-unzip val_features.zip
-unzip train_features.zip
-unzip test_features.zip
+gdown --id 1-SmXIY2NuQLTLnl9qT0Abya3GMSHpilO
+gdown --id 1cTc0An2FSXX-z3zod_UYA737NDh9gxR5
+mv  val_features.tar.gz.zip val_features.tar.gz
+mv  train_features.tar.gz.zip train_features.tar.gz
+gzip -d train_features.tar.gz
+gzip -d val_features.tar.gz
+tar -xf train_features.tar
+tar -xf val_features.tar
 
 # gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
 # unzip val_features.zip
