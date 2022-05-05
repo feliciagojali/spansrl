@@ -2,9 +2,11 @@ import torch
 from re import sub
 import numpy as np
 from tqdm import tqdm
+from collections import Counter
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
+core_arguments= ['ARG0', 'ARG1', 'ARG2', 'ARG3', 'ARG4']
 def extract_bert(model, tokenizer, sentences, max_tokens, device):
     bert_features = [bert_sent(sent, model, tokenizer, max_tokens, device) for  sent in sentences]
     return bert_features
@@ -168,8 +170,9 @@ def extract_pas_index(pas_list, tokens, max_tokens):
         arg_list.append(sentence_args_pair)
     return arg_list, max_sent
 
-def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_idx_mask=None, pred_idx_mask=None):
+def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, max_val, use_constraint, arg_idx_mask=None, pred_idx_mask=None):
     arr = [[] for _ in range(num_sent)]
+    all_val = [[] for _ in range(num_sent)]
     cur_pred = -1
     cur_sent = -1
     for id in ids:
@@ -178,12 +181,13 @@ def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_
             'args': []
         }
         sent, pred, arg, label = id
-        if (arg_idx_mask is not None):
-            arg = arg_idx_mask[sent][arg]
-        arg_id_start = arg_span_idx[0][arg]
-        arg_id_end = arg_span_idx[1][arg]
+        current_arg = arg_idx_mask[sent][arg] if arg_idx_mask is not None else arg
+        arg_id_start = arg_span_idx[0][current_arg]
+        arg_id_end = arg_span_idx[1][current_arg]
         arg_span = [arg_id_start, arg_id_end, labels_mapping[label]]
+        current_val = max_val[sent][pred][arg][0]
         if pred == cur_pred and sent == cur_sent :
+            all_val[sent][-1].append(current_val)
             arr[sent][-1]['args'].append(arg_span)
         else :
             cur_pred = pred
@@ -193,8 +197,87 @@ def convert_idx(ids, num_sent, arg_span_idx, pred_span_idx, labels_mapping, arg_
             pred_id_end = pred_span_idx[1][pred]
             sentence_args_pair['id_pred'] = [pred_id_start, pred_id_end]
             sentence_args_pair['args'].append(arg_span)
+            all_val[sent].append([current_val])
             arr[sent].append(sentence_args_pair)
         cur_sent = sent
+    if (use_constraint):
+        print('use constraint')
+        arr = filter_no_overlapping_spans(arr, all_val)
+    return arr
+
+def is_overlapped(range_1, range_2):
+    s_1, e_1 = range_1
+    s_2, e_2 = range_2
+    
+    arr = [x for x in range(max(s_1, s_2), min(e_1, e_2)+1)]
+    
+    if (len(arr)!=0):
+        return True
+    else:
+        return False
+    
+def filter_no_overlapping_spans(arr, value):
+    overlapped_pas = []
+    for i, (sent, val_sent) in enumerate(zip(arr, value)):
+        for j, (pas, val_pas) in enumerate(zip(sent, val_sent)):
+            args = pas['args']
+            overlapped = []
+            
+            for id_1, arg_1 in enumerate(args):
+                for id_2 in range(id_1+1, len(args)):
+                    arg_2 = args[id_2]
+                    if (is_overlapped(arg_1[:2], arg_2[:2])):
+                        if (len(overlapped) == 0):
+                            overlapped.append([id_1, id_2])
+                        else:
+                            for k, o in enumerate(overlapped):
+                                if id_1 in o or id_2 in o:
+                                    overlapped[k].extend([id_1, id_2])
+                                    break
+            if (len(overlapped) != 0):
+                for overlap in overlapped:
+                    overlap = list(set(overlap))
+                    val = [val_pas[x] for x in overlap]
+                    sorted_overlap = [x for _, x in sorted(zip(val, overlap), key=lambda pair:pair[0], reverse=True)]
+                    chosen = [sorted_overlap[0]]
+                    not_chosen = sorted_overlap[1:]
+                    for not_id in not_chosen:
+                        id = 0
+                        isOverlapped = False
+                        while(id < len(chosen) and not isOverlapped):
+                            current_id = chosen[id]
+                            isOverlapped = is_overlapped(args[not_id][:2], args[current_id][:2])
+                            id +=1
+                        if (not isOverlapped):
+                            chosen.append(not_id)
+                    not_chosen = sorted(list(set(sorted_overlap) - set(chosen)))
+                    for o in not_chosen:
+                        overlapped_pas.append([i, j, o])
+    
+    for id in reversed(overlapped_pas):
+        i, j, o = id
+        del arr[i][j]['args'][o]
+    return arr           
+                        
+                    
+def filter_no_multiple_core_arguments(arr, value):
+    duplicated_core_args = []
+    for i, (sent, val_sent) in enumerate(zip(arr, value)):
+        for j, (pas, val_pas) in enumerate(zip(sent, val_sent)):
+            pas_args = [pas_arg[2] for pas_arg in pas['args']]
+            counter = Counter(pas_args)
+            for core_arg in core_arguments:
+                if core_arg in counter and counter[core_arg] > 1 :
+                    pas_ids = [k for k, x in enumerate(pas_args) if x == core_arg]
+                    value_comparison = [val_pas[k] for k in pas_ids]
+                    max_id = pas_ids[np.argmax(value_comparison)]
+                    removed_ids = list(set(pas_ids) - set(max_id))
+                    for id in removed_ids:
+                        duplicated_core_args.append([i, j, id])
+    
+    for id in reversed(duplicated_core_args):
+        i, j, o = id
+        del arr[i][j]['args'][id]
     return arr
 
 def pad_input(data, max_token, pad_char='<pad>'):
@@ -247,7 +330,7 @@ def get_span_idx(input_idx, span_idx):
     return idx
 
 def check_pred_id(pred_id, pas_list):
-    arg_list = [x['args'] for x in pas_list if x['id_pred'] == pred_id]
+    arg_list = [x['args'] for x in pas_list if x['id_pred'][0] == pred_id[0]]
     return arg_list
 
 def _print_f1(total_gold, total_predicted, total_matched, message=""):

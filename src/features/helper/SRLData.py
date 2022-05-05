@@ -29,7 +29,7 @@ class SRLData(object):
         initial_char_dict = {"<pad>":0, "<unk>":1}
         self.char_dict = label_encode(config['char_list'], initial_char_dict)
         self.char_input = []
-
+        self.use_constraint = config['use_constraint']
         ## Word Embedding
         self.use_fasttext = config['use_fasttext']
         self.emb1_dim = 300
@@ -128,7 +128,7 @@ class SRLData(object):
         omit = tf.transpose(transpose[:-1], [1, 2, 3, 0])
         #array of position
         ids = tf.where(omit)
-        pas = convert_idx(ids, len(out), self.arg_span_idx, self.pred_span_idx, labels_list, arg_mask, pred_mask)
+        pas = convert_idx(ids, len(out), self.arg_span_idx, self.pred_span_idx, labels_list, max_val, self.use_constraint, arg_mask, pred_mask)
         return pas
 
     # Evaluate prediction and real, input is readable arg list
@@ -156,6 +156,7 @@ class SRLData(object):
                 
                 arg_list_in_predict = check_pred_id(pred_id, pred_sent)
                 if (len(arg_list_in_predict) == 0):
+                    print('no')
                     continue
                 total_matched_label.update(['V'])
                 for arg0 in gold_args:
