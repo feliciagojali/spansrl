@@ -88,8 +88,8 @@ class SRLData(object):
         num_preds = len(pred_start)
         num_args = len(arg_start)
         # Fill with null labels first
-        initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels], dtype='int16')
-        initialLabel = np.ones([batch_size, num_preds, num_args, 1], dtype='int16')
+        initialData = np.zeros([batch_size, num_preds, num_args, self.num_labels], dtype='int8')
+        initialLabel = np.ones([batch_size, num_preds, num_args, 1], dtype='int8')
         initialData = np.concatenate([initialData, initialLabel], axis=-1)
         indices = []
         for idx_sent, sentences in (enumerate(tqdm(arg_list))):

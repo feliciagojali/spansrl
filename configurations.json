@@ -26,9 +26,9 @@
         "batch_size": 8,
         "epochs": 240,
         "use_fasttext": false,
-        "use_constraint": true,
+        "use_constraint": false,
         "use_pruning": false,
-        "learning_rate": 9e-4,
+        "learning_rate": 1e-3,
         "train_data": "data/raw/test.txt",
         "word_emb_path":"data/pretrained/word2vec_news.model",
         "fasttext_emb_path": "data/pretrained/kyubyong.ft.id.bin",
@@ -38,6 +38,7 @@
         "features_2":"full_word_emb_bert.npy",
         "features_3": "full_char_input.npy",
         "output": "full_output.npy",
+        "checkpoint_path": "models/checkpoint",
         "model_path":"models/w2v_2bihlstm300"
     }
 }

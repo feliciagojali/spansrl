@@ -33,10 +33,6 @@ gzip -d val_features.tar.gz
 tar -xf train_features.tar
 tar -xf val_features.tar
 
-# gdown --id 1hXo67bbTyBBMYk1iJHam5rP9x7_Lq_mB
-# unzip val_features.zip
-# rm val_features.zip
-
 cd ".."
 
 if [ ! -d $RESULTS_PATH ]; then

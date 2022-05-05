@@ -1,9 +1,8 @@
 import sys
 import json
 import numpy as np
-import tensorflow as tf
 from models import SRL
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 
 from utils import eval_validation, load_data, print_default
 # import os
@@ -45,6 +44,7 @@ def main():
     initial_learning_rate = config['learning_rate']
 
     print(len(input[0]))
+    print(len(input_val[0]))
     # with strategy.scope():
     # with tf.device('/gpu:7'):
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
@@ -57,12 +57,11 @@ def main():
 
     
     # Define model
-    # model = SRL(config)
-    model = load_model("../drive/MyDrive/TA/last_checkpoint")
+    model = SRL(config)
     # Checkpoint
     bestCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['model_path'],
                                             save_best_only=True)
-    lastCheckpoint = tf.keras.callbacks.ModelCheckpoint("../drive/MyDrive/TA/last_checkpoint",
+    lastCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['checkpoint_path'],
                                             save_best_only=False)
     pruningCheckpoint = tf.keras.callbacks.ModelCheckpoint(config['model_path'],
                                             save_best_only=False)
@@ -72,7 +71,7 @@ def main():
     if (config['use_pruning']):
         model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, pruningCheckpoint])
     else:
-        model.fit(input, out, batch_size=batch_size, epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
+        model.fit(input, out, batch_size=batch_size, validation_data=(input_val, out_val), epochs=epochs, callbacks=[callback, bestCheckpoint, lastCheckpoint])
 
     with tf.device('/gpu:1'):
         eval_validation(config)
