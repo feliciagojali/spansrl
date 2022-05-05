@@ -10,7 +10,7 @@ from tqdm import tqdm
 from collections import Counter
 from gensim.models import fasttext, Word2Vec
 from transformers import AutoTokenizer, AutoModel
-from .helper import pad_sentences, create_span, save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, pad_input, extract_bert, extract_pas_index, save_emb, convert_idx
+from .helper import pad_sentences, create_span, save_npy, _print_f1, check_pred_id, split_first, label_encode, get_span_idx, extract_bert, extract_pas_index, convert_idx
 
 class SRLData(object):
     def __init__(self, config, emb=True):
@@ -19,6 +19,7 @@ class SRLData(object):
         self.max_arg_span = config['max_arg_span']
         self.max_pred_span = config['max_pred_span']
         self.max_tokens = config['max_tokens']
+        self.use_constraint = config['use_constraint'] if 'use_constraint' in config else False
         self.num_labels = len(config['srl_labels'])
         self.max_char = config['max_char']
         self.arg_span_idx = create_span(self.max_tokens, self.max_arg_span)
@@ -117,7 +118,7 @@ class SRLData(object):
         return initialData
     
     # Convert output model to readable argument lists
-    def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None): # (batch_size, num_preds, num_args, num_labels)
+    def convert_result_to_readable(self, out, arg_mask=None, pred_mask=None,): # (batch_size, num_preds, num_args, num_labels)
         labels_list = list(self.labels_mapping.keys())
         ## Max = 1
         max_val = tf.reduce_max(out, axis=-1, keepdims=True)
@@ -128,7 +129,7 @@ class SRLData(object):
         omit = tf.transpose(transpose[:-1], [1, 2, 3, 0])
         #array of position
         ids = tf.where(omit)
-        pas = convert_idx(ids, len(out), self.arg_span_idx, self.pred_span_idx, labels_list, arg_mask, pred_mask)
+        pas = convert_idx(ids, len(out), self.arg_span_idx, self.pred_span_idx, labels_list, max_val, self.use_constraint, arg_mask, pred_mask)
         return pas
 
     # Evaluate prediction and real, input is readable arg list
@@ -156,6 +157,9 @@ class SRLData(object):
                 
                 arg_list_in_predict = check_pred_id(pred_id, pred_sent)
                 if (len(arg_list_in_predict) == 0):
+                    for arg0 in gold_args:
+                        label = arg0[-1]
+                        total_gold_label.update([label])
                     continue
                 total_matched_label.update(['V'])
                 for arg0 in gold_args:

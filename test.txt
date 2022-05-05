@@ -1,0 +1,3 @@
+<keras.saving.saved_model.load.SRL object at 0x7fd2f07aff70>
+ListWrapper([<keras.layers.recurrent_v2.LSTM object at 0x7fd11872b4c0>, <keras.layers.recurrent_v2.LSTM object at 0x7fd1186c51c0>, <keras.layers.recurrent_v2.LSTM object at 0x7fd1186ca040>])
+200

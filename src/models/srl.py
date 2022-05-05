@@ -22,7 +22,6 @@ class SRL(Model):
         self.pred_span_idx = create_span(self.max_tokens, self.max_pred_span)
         self.second_emb = config['use_secondemb']
         # Blocks and Layers
-        dropout_val = config['dropout_value']
         self.character_block = CharacterEmbedding(config, name="character_embedding")
         # More embedding layer for wword emb and elmo?
         self.concatenate_1 = Concatenate(name="token_representation")
@@ -38,6 +37,7 @@ class SRL(Model):
         self.arg_endpoints_len = SpanEndpointsLength(self.arg_span_idx, name="arg_endpoints_and_length")
         self.arg_attention = CustomAttention(config, self.arg_span_idx, name="arg_attention_head")
         self.arg_length_emb = Embedding(input_dim=self.max_arg_span+1, output_dim=config['span_width_emb'], name='arg_width_emb')
+        self.dropout_2 = Dropout(config['dropout_value'])
         self.concatenate_2 = Concatenate(name='arg_span_representation')
 
         # Span representation for predicate 
@@ -45,6 +45,7 @@ class SRL(Model):
             self.pred_endpoints_len = SpanEndpointsLength(self.pred_span_idx, name="pred_endpoints_and_length")
             self.pred_attention = CustomAttention(config, self.pred_span_idx, name="pred_attention_head")
             self.pred_length_emb = Embedding(input_dim=self.max_pred_span+1, output_dim=config['max_pred_span'], name="pred_width_emb")
+            self.dropout_3 = Dropout(config['dropout_value'])
             self.concatenate_3 = Concatenate(name='pred_span_representation')
 
         # Unary score
@@ -98,6 +99,7 @@ class SRL(Model):
         # Shape arg_head_emb, arg_width_emb: (batch_size, num_spans, emb)
         arg_head_emb = self.arg_attention(mlp_arg_out)
         arg_width_emb = self.arg_length_emb(arg_length)
+        arg_width_emb = self.dropout_2(arg_width_emb)
         # Shape arg_rep: (batch_size, num_args, emb)
         arg_rep = self.concatenate_2([arg_start_emb, arg_end_emb, arg_head_emb, arg_width_emb])
 
@@ -109,6 +111,7 @@ class SRL(Model):
             # Shape pred_head_emb, pred_width_emb: (batch_size, num_spans, emb)
             pred_head_emb = self.pred_attention(mlp_pred_out)
             pred_width_emb = self.pred_length_emb(pred_length)
+            pred_width_emb = self.dropout_3(pred_width_emb)
             # Shape pred_rep: (batch_size, num_preds, emb)
             pred_rep = self.concatenate_3([pred_start_emb, pred_end_emb, pred_head_emb, pred_width_emb])
         else:
