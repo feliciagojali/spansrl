@@ -26,40 +26,25 @@ with tf.device('/gpu:4'):
     srl_data = SRLData(config)
     srl_model = load_model(config['model_path'])
 
+    print('Input your own sentence')
+    print('---------------------------')
+    print('Please input one sentences at a time and please end with `END` if already done')
+    print('Example, you want to inference 3 sentences, therefore type `Sentence 4: END`')
     while(True):
-        print('1. Input your own sentence')
-        print('2. Input sentences from file')
-        try:
-            opt = int(input('Please choose one of the options: '))
-        except:
-            continue
-
-        if (opt == 1):
-            print('Please input one sentences at a time and please end with `END` if already done')
-            print('Example, you want to inference 3 sentences, therefore type `Sentence 4: END`')
-            sentences = []
-            while(True):
-                sent = str(input('Sentence ' + str(len(sentences) + 1) +' : '))
-                if sent != 'END':
-                    if (sent == ''):
-                        continue
-                    tokenized = word_tokenize(sent)
-                    sentences.append(tokenized)
-                else:
-                    break
-            if (len(sentences) == 0):
-                print('Please enter at least one sentences!')
-                sys.exit()
-        else:
-            while(True):
-                sent = str(input('Please input filepath that contain the sentences: '))
-                try:
-                    f = open(sent)
-                except:
+        sentences = []
+        while(True):
+            sent = str(input('Sentence ' + str(len(sentences) + 1) +' : '))
+            if sent != 'END':
+                if (sent == ''):
                     continue
-                sentences = [word_tokenize(s) for s in f.readlines()]
+                tokenized = word_tokenize(sent)
+                sentences.append(tokenized)
+            else:
                 break
-
+        if (len(sentences) == 0):
+            print('Please enter at least one sentences!')
+            continue
+    
         print('Extracting features...')
 
         srl_data.extract_features(sentences)
@@ -76,8 +61,22 @@ with tf.device('/gpu:4'):
             pred = srl_model.predict(input_feat, batch_size=config['batch_size'])
             res =  srl_data.convert_result_to_readable(pred)
         
-        for result in res:
-            print(str(result)+'\n')
+        print('Result')
+        print('-----------')
+        for i ,result in enumerate(res):
+            print('Sentence '+ str(i+1) +'  :')
+            print('===')
+            for r in result:
+                print(str(r))
+                pred_s, pred_e = r['id_pred']
+                print('Predikat: ' + ' '.join(sentences[i][pred_s:pred_e+1]))
+                print('Argumen:')
+                for arg in r['args']:
+                    s, e, label = arg
+                    print(label + ': ' + ' '.join(sentences[i][s:e+1]))
+                print('===')
+                
+            print('-----------')
     # with open('data/results/' + sys.argv[2], 'w+') as f:
     #     for result in res:
     #         f.write(str(result) + '\n')
